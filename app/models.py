@@ -180,29 +180,14 @@ class Settings:
             settings = current_app.mongo_db.settings.find_one()
             
             if settings:
-                # Flatten the nested dictionaries for update
-                update_dict = {}
-                for key, value in data.items():
-                    if isinstance(value, dict):
-                        for subkey, subvalue in value.items():
-                            update_dict[f"{key}.{subkey}"] = subvalue
-                    else:
-                        update_dict[key] = value
-                
-                print(f"Flattened update dictionary: {update_dict}")
-                
-                # Perform the update with explicit document ID
-                from bson.objectid import ObjectId
+                # Perform the update
                 result = current_app.mongo_db.settings.update_one(
                     {'_id': settings['_id']},
-                    {'$set': update_dict}
+                    {'$set': data}
                 )
                 
-                # Log detailed info about the update operation
+                # Check if update was successful
                 print(f"Update operation details: matched={result.matched_count}, modified={result.modified_count}")
-                
-                # Even if no documents were modified (perhaps because values didn't change)
-                # we still consider it a success
                 return True
             else:
                 # Insert new settings if none exist

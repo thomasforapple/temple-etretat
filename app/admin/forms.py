@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SelectField, HiddenField, SubmitField, FormField
+from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SelectField, HiddenField, SubmitField, FormField, Form
 from wtforms.validators import DataRequired, Email, Length, Optional, Regexp
 from flask import current_app
 
@@ -31,7 +31,8 @@ def get_image_upload_form():
     
     return ImageUploadForm
 
-class ColorForm(FlaskForm):
+# Change from FlaskForm to Form for subforms
+class ColorForm(Form):
     primary = StringField('Couleur principale', validators=[
         DataRequired(), 
         Regexp(r'^#(?:[0-9a-fA-F]{3}){1,2}$', message='Format hexadécimal invalide')
@@ -53,7 +54,8 @@ class ColorForm(FlaskForm):
         Regexp(r'^#(?:[0-9a-fA-F]{3}){1,2}$', message='Format hexadécimal invalide')
     ])
 
-class FontsForm(FlaskForm):
+# Change from FlaskForm to Form for subforms
+class FontsForm(Form):
     title = SelectField('Police des titres', choices=[
         ('Rubik', 'Rubik'),
         ('Montserrat', 'Montserrat'),
