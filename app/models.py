@@ -180,21 +180,30 @@ class Settings:
             settings = current_app.mongo_db.settings.find_one()
             
             if settings:
-                # Perform the update
+                # Flatten the nested dictionaries for update
+                update_dict = {}
+                for key, value in data.items():
+                    if isinstance(value, dict):
+                        for subkey, subvalue in value.items():
+                            update_dict[f"{key}.{subkey}"] = subvalue
+                    else:
+                        update_dict[key] = value
+                
+                print(f"Flattened update dictionary: {update_dict}")
+                
+                # Perform the update with explicit document ID
+                from bson.objectid import ObjectId
                 result = current_app.mongo_db.settings.update_one(
                     {'_id': settings['_id']},
-                    {'$set': data}
+                    {'$set': update_dict}
                 )
                 
-                # Check if update was successful
-                if result.modified_count > 0:
-                    print(f"Settings updated successfully: {result.modified_count} document modified")
-                    return True
-                else:
-                    print("Settings update did not modify any documents")
-                    # Even if no documents were modified (because the values didn't change),
-                    # we consider it a success
-                    return True
+                # Log detailed info about the update operation
+                print(f"Update operation details: matched={result.matched_count}, modified={result.modified_count}")
+                
+                # Even if no documents were modified (perhaps because values didn't change)
+                # we still consider it a success
+                return True
             else:
                 # Insert new settings if none exist
                 result = current_app.mongo_db.settings.insert_one(data)
