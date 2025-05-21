@@ -209,6 +209,7 @@ def edit_settings():
     settings = Settings.get()
     
     if form.validate_on_submit():
+        print("Form validated, processing submission...")
         data = {
             'site_title': form.site_title.data,
             'colors': {
@@ -226,15 +227,32 @@ def edit_settings():
             'footer_text': form.footer_text.data
         }
         
-        if Settings.update(data):
-            cache.clear()  # Vider le cache après modification
-            flash('Paramètres mis à jour avec succès', 'success')
-            return redirect(url_for('admin.edit_settings'))
+        # Add debugging output
+        print(f"Form data extracted: {data}")
         
-        flash('Erreur lors de la mise à jour des paramètres', 'danger')
+        # Update settings
+        success = Settings.update(data)
+        if success:
+            # Clear the cache to ensure new settings are used
+            cache.clear()
+            flash('Paramètres mis à jour avec succès', 'success')
+            
+            # Force reload of settings from MongoDB to confirm changes are saved
+            updated_settings = Settings.get()
+            print(f"Reloaded settings after update: {updated_settings}")
+            
+            # Redirect to force a GET request and avoid form resubmission
+            return redirect(url_for('admin.edit_settings'))
+        else:
+            flash('Erreur lors de la mise à jour des paramètres', 'danger')
+    
+    # If form has errors, print them for debugging
+    if form.errors:
+        print(f"Form validation errors: {form.errors}")
     
     # Pré-remplir le formulaire avec les valeurs actuelles
     if not form.is_submitted():
+        print("Pre-filling form with current settings...")
         form.site_title.data = settings.get('site_title', '')
         form.colors.primary.data = settings.get('colors', {}).get('primary', '#3B5F7B')
         form.colors.secondary.data = settings.get('colors', {}).get('secondary', '#2F3A45')
@@ -244,7 +262,7 @@ def edit_settings():
         form.fonts.title.data = settings.get('fonts', {}).get('title', 'Rubik')
         form.fonts.body.data = settings.get('fonts', {}).get('body', 'Nunito')
         form.border_radius.data = settings.get('border_radius', '12px')
-        form.footer_text.data = settings.get('footer_text', 'Association du Temple d\'Etretat')
+        form.footer_text.data = settings.get('footer_text', 'Association du Temple d\'Etretat-debug')
     
     return render_template('admin/settings.html', form=form, settings=settings)
 
