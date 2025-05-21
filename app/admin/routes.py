@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, current_app, abort
 from flask_login import login_required, current_user
 from app.admin import admin
-from app.admin.forms import LoginForm, SectionForm, ImageUploadForm, SettingsForm
+from app.admin.forms import LoginForm, SectionForm, get_image_upload_form, SettingsForm
 from app.models import Section, Settings, User
 from app.auth import admin_login, admin_logout, admin_required
 from app import cache
@@ -25,7 +25,10 @@ def login():
             return redirect(url_for('admin.dashboard'))
         flash('Nom d\'utilisateur ou mot de passe invalide', 'danger')
     
-    return render_template('admin/login.html', form=form)
+    # Récupérer les paramètres du site pour les styles
+    settings = Settings.get()
+    
+    return render_template('admin/login.html', form=form, settings=settings)
 
 @admin.route('/logout')
 @login_required
@@ -38,7 +41,8 @@ def logout():
 @admin_required
 def dashboard():
     sections = Section.get_all()
-    return render_template('admin/dashboard.html', sections=sections)
+    settings = Settings.get()
+    return render_template('admin/dashboard.html', sections=sections, settings=settings)
 
 @admin.route('/sections/<section_id>', methods=['GET', 'POST'])
 @admin_required
@@ -70,6 +74,9 @@ def edit_section(section_id):
     form.visible.data = section.get('visible', True)
     form.order.data = section.get('order', 0)
     
+    # Créer le formulaire d'upload avec le contexte d'application actuel
+    ImageUploadForm = get_image_upload_form()
+    
     return render_template(
         'admin/edit_section.html', 
         form=form, 
@@ -85,6 +92,8 @@ def upload_image(section_id):
         flash('Section non trouvée', 'danger')
         return redirect(url_for('admin.dashboard'))
     
+    # Créer le formulaire d'upload avec le contexte d'application actuel
+    ImageUploadForm = get_image_upload_form()
     form = ImageUploadForm()
     
     if form.validate_on_submit():

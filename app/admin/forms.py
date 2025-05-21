@@ -17,14 +17,19 @@ class SectionForm(FlaskForm):
     order = FloatField('Ordre d\'affichage', validators=[DataRequired()])
     submit = SubmitField('Enregistrer')
 
-class ImageUploadForm(FlaskForm):
-    image = FileField('Image', validators=[
-        FileRequired(),
-        FileAllowed(current_app.config['ALLOWED_EXTENSIONS'], 'Images uniquement !')
-    ])
-    alt_text = StringField('Texte alternatif', validators=[DataRequired()])
-    caption = StringField('Légende', validators=[Optional()])
-    submit = SubmitField('Télécharger')
+# Définir une fonction qui crée le formulaire avec le contexte d'application
+def get_image_upload_form():
+    # Cette fonction sera appelée dans les routes, avec le contexte d'application
+    class ImageUploadForm(FlaskForm):
+        image = FileField('Image', validators=[
+            FileRequired(),
+            FileAllowed(current_app.config['ALLOWED_EXTENSIONS'], 'Images uniquement !')
+        ])
+        alt_text = StringField('Texte alternatif', validators=[DataRequired()])
+        caption = StringField('Légende', validators=[Optional()])
+        submit = SubmitField('Télécharger')
+    
+    return ImageUploadForm
 
 class ColorForm(FlaskForm):
     primary = StringField('Couleur principale', validators=[
