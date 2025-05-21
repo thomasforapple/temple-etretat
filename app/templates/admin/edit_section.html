@@ -59,20 +59,12 @@
                         {% endfor %}
                     </div>
                     
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="form-check form-switch">
-                                {{ form.visible(class="form-check-input") }}
-                                {{ form.visible.label(class="form-check-label") }}
-                            </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.visible(class="form-check-input") }}
+                            {{ form.visible.label(class="form-check-label") }}
                         </div>
-                        <div class="col-md-6">
-                            {{ form.order.label(class="form-label") }}
-                            {{ form.order(class="form-control", type="number", step="0.1") }}
-                            {% for error in form.order.errors %}
-                                <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        </div>
+                        <div class="form-text">L'ordre des sections peut être modifié par glisser-déposer depuis le tableau de bord.</div>
                     </div>
                     
                     <div class="d-grid">
