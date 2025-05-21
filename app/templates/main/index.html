@@ -1,0 +1,29 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+    {% for section in sections %}
+        <section id="{{ section.name }}" class="section section-{{ section.name }}">
+            <h2 class="section-title">{{ section.title }}</h2>
+            <div class="section-content">
+                {{ section.content | safe }}
+                
+                {% if section.images and section.images|length > 0 %}
+                    <div class="image-gallery">
+                        {% for image in section.images %}
+                            <figure>
+                                <img 
+                                    src="{{ image.path }}" 
+                                    alt="{{ image.alt_text }}" 
+                                    class="gallery-image"
+                                >
+                                {% if image.caption %}
+                                    <figcaption class="image-caption">{{ image.caption }}</figcaption>
+                                {% endif %}
+                            </figure>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    {% endfor %}
+{% endblock %}

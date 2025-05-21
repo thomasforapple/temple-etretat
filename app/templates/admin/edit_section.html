@@ -1,0 +1,179 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Modifier la section {{ section.title }} - Administration Temple d'Etretat{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.css" rel="stylesheet">
+<style>
+    .image-thumbnail {
+        max-width: 150px;
+        max-height: 150px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        object-fit: cover;
+    }
+    
+    .image-card {
+        transition: transform 0.2s ease;
+    }
+    
+    .image-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Modifier la section: {{ section.title }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                Informations de la section
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.edit_section', section_id=section._id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control") }}
+                        {% for error in form.title.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.content.label(class="form-label") }}
+                        {{ form.content(id="summernote", class="form-control") }}
+                        {% for error in form.content.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                {{ form.visible(class="form-check-input") }}
+                                {{ form.visible.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.order.label(class="form-label") }}
+                            {{ form.order(class="form-control", type="number", step="0.1") }}
+                            {% for error in form.order.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                Gestion des images
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.upload_image', section_id=section._id) }}" enctype="multipart/form-data">
+                    {{ upload_form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ upload_form.image.label(class="form-label") }}
+                        {{ upload_form.image(class="form-control") }}
+                        <div class="form-text">Formats acceptés: jpg, jpeg, png, gif, svg, webp</div>
+                        {% for error in upload_form.image.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ upload_form.alt_text.label(class="form-label") }}
+                        {{ upload_form.alt_text(class="form-control") }}
+                        <div class="form-text">Description pour les lecteurs d'écran (accessibilité)</div>
+                        {% for error in upload_form.alt_text.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ upload_form.caption.label(class="form-label") }}
+                        {{ upload_form.caption(class="form-control") }}
+                        <div class="form-text">Légende affichée sous l'image (optionnel)</div>
+                        {% for error in upload_form.caption.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ upload_form.submit(class="btn btn-success") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if section.images and section.images|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                Images existantes ({{ section.images|length }})
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for image in section.images %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card image-card">
+                            <img src="{{ image.path }}" alt="{{ image.alt_text }}" class="image-thumbnail card-img-top">
+                            <div class="card-body p-2">
+                                <p class="card-text small mb-1">{{ image.alt_text|truncate(20) }}</p>
+                                <form method="POST" action="{{ url_for('admin.remove_image', section_id=section._id, image_id=image.id) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette image ?');">
+                                    <button type="submit" class="btn btn-danger btn-sm w-100">
+                                        <i class="bi bi-trash"></i> Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#summernote').summernote({
+            placeholder: 'Contenu de la section...',
+            tabsize: 2,
+            height: 300,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
+        });
+    });
+</script>
+{% endblock %}

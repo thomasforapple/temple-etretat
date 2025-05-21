@@ -1,0 +1,335 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Paramètres du site - Administration Temple d'Etretat{% endblock %}
+
+{% block extra_head %}
+<style>
+    .color-input-group {
+        display: flex;
+        align-items: center;
+    }
+    
+    .color-preview {
+        width: 40px;
+        height: 40px;
+        border-radius: 5px;
+        margin-right: 10px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+    }
+    
+    .preview-box {
+        padding: 20px;
+        border-radius: v-bind("settings.border_radius");
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .preview-title {
+        font-family: v-bind("''+settings.fonts.title"), sans-serif;
+        color: v-bind("settings.colors.primary");
+    }
+    
+    .preview-text {
+        font-family: v-bind("''+settings.fonts.body"), sans-serif;
+        color: v-bind("settings.colors.secondary");
+    }
+    
+    .preview-button {
+        background-color: v-bind("settings.colors.accent");
+        color: v-bind("settings.colors.secondary");
+        border: none;
+        padding: 8px 15px;
+        border-radius: calc(v-bind("settings.border_radius") * 0.5);
+        transition: all 0.3s ease;
+    }
+    
+    .preview-button:hover {
+        background-color: v-bind("settings.colors.highlight");
+        color: white;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Paramètres du site</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                Modifier les paramètres
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.edit_settings') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.site_title.label(class="form-label") }}
+                        {{ form.site_title(class="form-control") }}
+                        {% for error in form.site_title.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <h5 class="mb-3">Couleurs</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            {{ form.colors.primary.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text color-preview" id="preview-primary" style="background-color: {{ form.colors.primary.data }};"></span>
+                                {{ form.colors.primary(class="form-control", id="primary-color") }}
+                            </div>
+                            {% for error in form.colors.primary.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.colors.secondary.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text color-preview" id="preview-secondary" style="background-color: {{ form.colors.secondary.data }};"></span>
+                                {{ form.colors.secondary(class="form-control", id="secondary-color") }}
+                            </div>
+                            {% for error in form.colors.secondary.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.colors.background.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text color-preview" id="preview-background" style="background-color: {{ form.colors.background.data }};"></span>
+                                {{ form.colors.background(class="form-control", id="background-color") }}
+                            </div>
+                            {% for error in form.colors.background.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.colors.accent.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text color-preview" id="preview-accent" style="background-color: {{ form.colors.accent.data }};"></span>
+                                {{ form.colors.accent(class="form-control", id="accent-color") }}
+                            </div>
+                            {% for error in form.colors.accent.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.colors.highlight.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text color-preview" id="preview-highlight" style="background-color: {{ form.colors.highlight.data }};"></span>
+                                {{ form.colors.highlight(class="form-control", id="highlight-color") }}
+                            </div>
+                            {% for error in form.colors.highlight.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">Polices</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            {{ form.fonts.title.label(class="form-label") }}
+                            {{ form.fonts.title(class="form-select") }}
+                            {% for error in form.fonts.title.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.fonts.body.label(class="form-label") }}
+                            {{ form.fonts.body(class="form-select") }}
+                            {% for error in form.fonts.body.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            {{ form.border_radius.label(class="form-label") }}
+                            {{ form.border_radius(class="form-control") }}
+                            <div class="form-text">Format: 12px, 1rem, etc.</div>
+                            {% for error in form.border_radius.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.footer_text.label(class="form-label") }}
+                            {{ form.footer_text(class="form-control") }}
+                            {% for error in form.footer_text.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                Aperçu
+            </div>
+            <div class="card-body" id="preview-app">
+                <div class="preview-box" :style="{
+                    backgroundColor: settings.colors.background,
+                    borderRadius: settings.border_radius
+                }">
+                    <h3 class="preview-title">Titre d'exemple</h3>
+                    <p class="preview-text">Ceci est un exemple de texte pour montrer l'apparence des polices et des couleurs.</p>
+                    <button class="preview-button">Bouton d'exemple</button>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Couleurs
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex mb-2">
+                            <div :style="{
+                                backgroundColor: settings.colors.primary,
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '4px',
+                                marginRight: '10px'
+                            }"></div>
+                            <div>Primaire: {{ '{{ settings.colors.primary }}' }}</div>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <div :style="{
+                                backgroundColor: settings.colors.secondary,
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '4px',
+                                marginRight: '10px'
+                            }"></div>
+                            <div>Secondaire: {{ '{{ settings.colors.secondary }}' }}</div>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <div :style="{
+                                backgroundColor: settings.colors.background,
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '4px',
+                                marginRight: '10px',
+                                border: '1px solid #ddd'
+                            }"></div>
+                            <div>Fond: {{ '{{ settings.colors.background }}' }}</div>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <div :style="{
+                                backgroundColor: settings.colors.accent,
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '4px',
+                                marginRight: '10px'
+                            }"></div>
+                            <div>Accent: {{ '{{ settings.colors.accent }}' }}</div>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <div :style="{
+                                backgroundColor: settings.colors.highlight,
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '4px',
+                                marginRight: '10px'
+                            }"></div>
+                            <div>Surbrillance: {{ '{{ settings.colors.highlight }}' }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Typographie
+                    </div>
+                    <div class="card-body">
+                        <h5 :style="{fontFamily: `'${settings.fonts.title}', sans-serif`}">
+                            Police de titre: {{ '{{ settings.fonts.title }}' }}
+                        </h5>
+                        <p :style="{fontFamily: `'${settings.fonts.body}', sans-serif`}">
+                            Police de corps: {{ '{{ settings.fonts.body }}' }}
+                        </p>
+                        <p>Arrondi des bordures: {{ '{{ settings.border_radius }}' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+    // Vue app for live preview
+    const { createApp, ref, watch } = Vue;
+    
+    createApp({
+        setup() {
+            const settings = ref({
+                colors: {
+                    primary: "{{ form.colors.primary.data }}",
+                    secondary: "{{ form.colors.secondary.data }}",
+                    background: "{{ form.colors.background.data }}",
+                    accent: "{{ form.colors.accent.data }}",
+                    highlight: "{{ form.colors.highlight.data }}"
+                },
+                fonts: {
+                    title: "{{ form.fonts.title.data }}",
+                    body: "{{ form.fonts.body.data }}"
+                },
+                border_radius: "{{ form.border_radius.data }}"
+            });
+            
+            return {
+                settings
+            };
+        }
+    }).mount('#preview-app');
+    
+    // Color picker interactions
+    document.addEventListener('DOMContentLoaded', function() {
+        const colorInputs = [
+            { input: document.getElementById('primary-color'), preview: document.getElementById('preview-primary') },
+            { input: document.getElementById('secondary-color'), preview: document.getElementById('preview-secondary') },
+            { input: document.getElementById('background-color'), preview: document.getElementById('preview-background') },
+            { input: document.getElementById('accent-color'), preview: document.getElementById('preview-accent') },
+            { input: document.getElementById('highlight-color'), preview: document.getElementById('preview-highlight') }
+        ];
+        
+        colorInputs.forEach(({ input, preview }) => {
+            if (input && preview) {
+                // Update preview on input change
+                input.addEventListener('input', function() {
+                    preview.style.backgroundColor = this.value;
+                });
+                
+                // Click preview to open color picker
+                preview.addEventListener('click', function() {
+                    input.click();
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

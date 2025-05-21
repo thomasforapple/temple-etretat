@@ -1,0 +1,127 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Tableau de bord - Administration Temple d'Etretat{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Tableau de bord</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                Sections du site
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Ordre</th>
+                                <th>Titre</th>
+                                <th>Nom</th>
+                                <th>Visibilité</th>
+                                <th>Images</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for section in sections %}
+                            <tr>
+                                <td>{{ section.order }}</td>
+                                <td>{{ section.title }}</td>
+                                <td>{{ section.name }}</td>
+                                <td>
+                                    {% if section.visible %}
+                                        <span class="badge bg-success">Visible</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Masquée</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ section.images|length if section.images else 0 }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.edit_section', section_id=section._id) }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Éditer
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                Paramètres du site
+            </div>
+            <div class="card-body">
+                <p><strong>Titre du site :</strong> {{ settings.site_title }}</p>
+                
+                <p><strong>Couleurs :</strong></p>
+                <ul class="list-unstyled">
+                    <li>
+                        <span class="color-preview" style="background-color: {{ settings.colors.primary }};"></span>
+                        Primaire : {{ settings.colors.primary }}
+                    </li>
+                    <li>
+                        <span class="color-preview" style="background-color: {{ settings.colors.secondary }};"></span>
+                        Secondaire : {{ settings.colors.secondary }}
+                    </li>
+                    <li>
+                        <span class="color-preview" style="background-color: {{ settings.colors.background }};"></span>
+                        Fond : {{ settings.colors.background }}
+                    </li>
+                    <li>
+                        <span class="color-preview" style="background-color: {{ settings.colors.accent }};"></span>
+                        Accent : {{ settings.colors.accent }}
+                    </li>
+                    <li>
+                        <span class="color-preview" style="background-color: {{ settings.colors.highlight }};"></span>
+                        Surbrillance : {{ settings.colors.highlight }}
+                    </li>
+                </ul>
+                
+                <p><strong>Polices :</strong></p>
+                <ul>
+                    <li>Titres : {{ settings.fonts.title }}</li>
+                    <li>Corps de texte : {{ settings.fonts.body }}</li>
+                </ul>
+                
+                <p><strong>Arrondi des bordures :</strong> {{ settings.border_radius }}</p>
+                
+                <a href="{{ url_for('admin.edit_settings') }}" class="btn btn-primary">
+                    <i class="bi bi-gear"></i> Modifier les paramètres
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                Actions rapides
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin.preview') }}" target="_blank" class="btn btn-success">
+                        <i class="bi bi-eye"></i> Prévisualiser le site
+                    </a>
+                    <a href="{{ url_for('admin.clear_cache') }}" class="btn btn-warning">
+                        <i class="bi bi-arrow-clockwise"></i> Vider le cache
+                    </a>
+                    <a href="{{ url_for('main.index') }}" target="_blank" class="btn btn-info">
+                        <i class="bi bi-globe"></i> Voir le site public
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

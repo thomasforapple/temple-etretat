@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ settings.site_title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    {% if settings.fonts.title == 'Rubik' %}
+        <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&display=swap" rel="stylesheet">
+    {% elif settings.fonts.title == 'Montserrat' %}
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    {% elif settings.fonts.title == 'Playfair Display' %}
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    {% elif settings.fonts.title == 'Raleway' %}
+        <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600&display=swap" rel="stylesheet">
+    {% elif settings.fonts.title == 'Lora' %}
+        <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    {% endif %}
+
+    {% if settings.fonts.body == 'Nunito' %}
+        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400&display=swap" rel="stylesheet">
+    {% elif settings.fonts.body == 'Open Sans' %}
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap" rel="stylesheet">
+    {% elif settings.fonts.body == 'Roboto' %}
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    {% elif settings.fonts.body == 'Source Sans Pro' %}
+        <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400&display=swap" rel="stylesheet">
+    {% elif settings.fonts.body == 'Lato' %}
+        <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    {% endif %}
+
+    <style>
+        :root {
+            --color-primary: {{ settings.colors.primary }};
+            --color-secondary: {{ settings.colors.secondary }};
+            --color-background: {{ settings.colors.background }};
+            --color-accent: {{ settings.colors.accent }};
+            --color-highlight: {{ settings.colors.highlight }};
+            --border-radius: {{ settings.border_radius }};
+            --font-title: "{{ settings.fonts.title }}", sans-serif;
+            --font-body: "{{ settings.fonts.body }}", sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            font-weight: 300;
+            background-color: var(--color-background);
+            color: var(--color-secondary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .banner {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--color-background);
+            padding: 20px;
+        }
+
+        .banner-photo {
+            flex: 1;
+            text-align: center;
+            padding: 20px;
+            margin: 10px;
+            font-family: var(--font-title);
+            font-weight: 400;
+            color: var(--color-primary);
+            font-size: 1.2rem;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: calc(var(--border-radius) * 0.8);
+            transition: all 0.3s ease;
+        }
+        
+        .banner-photo:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.03);
+        }
+
+        .nav {
+            background-color: var(--color-accent);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            padding: 15px;
+            color: var(--color-secondary);
+            text-decoration: none;
+            font-family: var(--font-title);
+            font-weight: 400;
+            transition: all 0.3s;
+            border-radius: calc(var(--border-radius) * 0.5);
+            margin: 5px;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 20px;
+            min-height: 600px;
+            background-color: var(--color-background);
+        }
+
+        .section {
+            margin-bottom: 50px;
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            scroll-margin-top: 150px;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+        }
+
+        .section-title {
+            font-family: var(--font-title);
+            font-weight: 400;
+            color: var(--color-primary);
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--color-accent);
+        }
+
+        .section-content {
+            padding: 10px;
+        }
+
+        .footer {
+            background-color: var(--color-highlight);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+
+        .footer-item {
+            margin: 5px 10px;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .image-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .gallery-image {
+            border-radius: calc(var(--border-radius) * 0.5);
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-image:hover {
+            transform: scale(1.05);
+        }
+
+        .image-caption {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            color: var(--color-secondary);
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .banner {
+                flex-direction: column;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+
+            .nav-item {
+                flex: 1 0 33%;
+                text-align: center;
+            }
+
+            .footer {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-item {
+                flex: 1 0 50%;
+            }
+        }
+
+        {% if preview %}
+        .preview-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            z-index: 1100;
+        }
+        
+        .preview-bar a {
+            color: white;
+            text-decoration: underline;
+            margin: 0 10px;
+        }
+        {% endif %}
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="banner">
+                {% for i in range(3) %}
+                    <div class="banner-photo">
+                        {% if loop.index == 2 %}
+                            Photo temple
+                        {% else %}
+                            Photo Etretat
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <nav class="nav">
+                {% for section in sections %}
+                    <a href="#{{ section.name }}" class="nav-item">{{ section.title }}</a>
+                {% endfor %}
+            </nav>
+        </header>
+        
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+        
+        <footer class="footer">
+            <div class="footer-item">Date site</div>
+            <div class="footer-item">
+                <a href="mailto:templeetretat@gmail.com">contact email: templeetretat@gmail.com</a>
+            </div>
+            <div class="footer-item">{{ settings.footer_text }}</div>
+        </footer>
+    </div>
+
+    {% if preview %}
+    <div class="preview-bar">
+        Mode prévisualisation - <a href="{{ url_for('admin.dashboard') }}">Retour à l'administration</a>
+    </div>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetSection = document.getElementById(targetId);
+                    
+                    targetSection.scrollIntoView({ 
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
