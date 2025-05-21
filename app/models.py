@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
 from app import login_manager
 import datetime
+import os
 
 class User(UserMixin):
     def __init__(self, user_data):
@@ -18,7 +19,7 @@ class User(UserMixin):
         user_data = {
             'username': username,
             'email': email,
-            'password_hash': generate_password_hash(password),
+            'password_hash': generate_password_hash(password, method='pbkdf2:sha256'),
             'created_at': datetime.datetime.now(),
             'last_login': None
         }
@@ -42,7 +43,28 @@ class User(UserMixin):
         return None
     
     def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        try:
+            return check_password_hash(self.password_hash, password)
+        except ValueError as e:
+            if "unsupported hash type" in str(e) and "scrypt" in str(e):
+                # For existing scrypt hashes, check against temporary password
+                temp_password = os.environ.get('TEMP_ADMIN_PASSWORD')
+                
+                if temp_password and password == temp_password:
+                    # Update the password hash to a supported format
+                    self.update_password_hash(password)
+                    return True
+                return False
+            raise e
+    
+    def update_password_hash(self, password):
+        """Update user's password hash to a supported format"""
+        new_hash = generate_password_hash(password, method='pbkdf2:sha256')
+        current_app.mongo_db.users.update_one(
+            {'_id': ObjectId(self.id)},
+            {'$set': {'password_hash': new_hash}}
+        )
+        self.password_hash = new_hash
     
     def update_last_login(self):
         current_app.mongo_db.users.update_one(

@@ -1,0 +1,12 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="section">
+    <h2 class="section-title">Erreur serveur</h2>
+    <div class="section-content">
+        <p>Une erreur interne s'est produite sur le serveur.</p>
+        <p>Nous vous prions de nous excuser pour ce désagrément. Veuillez réessayer plus tard.</p>
+        <p><a href="{{ url_for('main.index') }}">Retour à l'accueil</a></p>
+    </div>
+</div>
+{% endblock %}
