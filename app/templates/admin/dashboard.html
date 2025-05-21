@@ -2,6 +2,29 @@
 
 {% block title %}Tableau de bord - Administration Temple d'Etretat{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/modular/sortable.css">
+<style>
+    .draggable-table tbody tr {
+        cursor: move;
+    }
+    .sortable-ghost {
+        background-color: #f8f9fa;
+        opacity: 0.5;
+    }
+    .sortable-drag {
+        background-color: #e9ecef;
+    }
+    .sort-handle {
+        cursor: grab;
+        color: #adb5bd;
+    }
+    .sort-handle:hover {
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Tableau de bord</h1>
@@ -10,15 +33,23 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card mb-4">
-            <div class="card-header">
-                Sections du site
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Sections du site</span>
+                <div>
+                    <button id="save-order-btn" class="btn btn-sm btn-success d-none">
+                        <i class="bi bi-save"></i> Enregistrer l'ordre
+                    </button>
+                </div>
             </div>
             <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Glissez-déposez les lignes pour réorganiser les sections.
+                </div>
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Ordre</th>
+                                <th width="50"></th>
                                 <th>Titre</th>
                                 <th>Nom</th>
                                 <th>Visibilité</th>
@@ -26,10 +57,10 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="sortable-sections">
                             {% for section in sections %}
-                            <tr>
-                                <td>{{ section.order }}</td>
+                            <tr data-id="{{ section._id }}">
+                                <td class="sort-handle"><i class="bi bi-grip-vertical"></i></td>
                                 <td>{{ section.title }}</td>
                                 <td>{{ section.name }}</td>
                                 <td>
@@ -124,4 +155,99 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortableList = document.getElementById('sortable-sections');
+        const saveOrderBtn = document.getElementById('save-order-btn');
+        
+        let hasChanged = false;
+        
+        // Initialize Sortable
+        const sortable = new Sortable(sortableList, {
+            handle: '.sort-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: function() {
+                hasChanged = true;
+                saveOrderBtn.classList.remove('d-none');
+            }
+        });
+        
+        // Save order button handler
+        saveOrderBtn.addEventListener('click', function() {
+            const rows = sortableList.querySelectorAll('tr');
+            const sectionIds = Array.from(rows).map(row => row.dataset.id);
+            
+            // Show loading state
+            saveOrderBtn.disabled = true;
+            saveOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enregistrement...';
+            
+            // Send order to server
+            fetch('{{ url_for("admin.reorder_sections") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ sectionIds: sectionIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    const alertHtml = `
+                        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                            ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    document.querySelector('.card-body').insertAdjacentHTML('afterbegin', alertHtml);
+                    
+                    // Reset state
+                    hasChanged = false;
+                    saveOrderBtn.classList.add('d-none');
+                } else {
+                    // Show error message
+                    const alertHtml = `
+                        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                            ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    document.querySelector('.card-body').insertAdjacentHTML('afterbegin', alertHtml);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving order:', error);
+                const alertHtml = `
+                    <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                        Erreur lors de l'enregistrement de l'ordre: ${error.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                document.querySelector('.card-body').insertAdjacentHTML('afterbegin', alertHtml);
+            })
+            .finally(() => {
+                // Reset button state
+                saveOrderBtn.disabled = false;
+                saveOrderBtn.innerHTML = '<i class="bi bi-save"></i> Enregistrer l\'ordre';
+            });
+        });
+        
+        // Confirm leaving page if changes not saved
+        window.addEventListener('beforeunload', function(e) {
+            if (hasChanged) {
+                const message = 'Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir quitter cette page?';
+                e.returnValue = message;
+                return message;
+            }
+        });
+    });
+</script>
 {% endblock %}

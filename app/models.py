@@ -109,6 +109,20 @@ class Section:
             return False
     
     @staticmethod
+    def reorder(section_ids):
+        """Update the order of sections based on the provided list of IDs"""
+        try:
+            for index, section_id in enumerate(section_ids):
+                current_app.mongo_db.sections.update_one(
+                    {'_id': ObjectId(section_id)},
+                    {'$set': {'order': index}}
+                )
+            return True
+        except Exception as e:
+            print(f"Error reordering sections: {str(e)}")
+            return False
+    
+    @staticmethod
     def add_image(section_id, image_data):
         try:
             current_app.mongo_db.sections.update_one(
@@ -169,5 +183,6 @@ class Settings:
             else:
                 current_app.mongo_db.settings.insert_one(data)
             return True
-        except:
+        except Exception as e:
+            print(f"Error updating settings: {str(e)}")
             return False

@@ -1,4 +1,4 @@
-{% extends 'admin/base.html' %}
+{{% extends 'admin/base.html' %}
 
 {% block title %}Paramètres du site - Administration Temple d'Etretat{% endblock %}
 
@@ -20,32 +20,32 @@
     
     .preview-box {
         padding: 20px;
-        border-radius: v-bind("settings.border_radius");
+        border-radius: var(--border-radius);
         margin-bottom: 20px;
         transition: all 0.3s ease;
     }
     
     .preview-title {
-        font-family: v-bind("''+settings.fonts.title"), sans-serif;
-        color: v-bind("settings.colors.primary");
+        font-family: var(--font-title), sans-serif;
+        color: var(--color-primary);
     }
     
     .preview-text {
-        font-family: v-bind("''+settings.fonts.body"), sans-serif;
-        color: v-bind("settings.colors.secondary");
+        font-family: var(--font-body), sans-serif;
+        color: var(--color-secondary);
     }
     
     .preview-button {
-        background-color: v-bind("settings.colors.accent");
-        color: v-bind("settings.colors.secondary");
+        background-color: var(--color-accent);
+        color: var(--color-secondary);
         border: none;
         padding: 8px 15px;
-        border-radius: calc(v-bind("settings.border_radius") * 0.5);
+        border-radius: calc(var(--border-radius) * 0.5);
         transition: all 0.3s ease;
     }
     
     .preview-button:hover {
-        background-color: v-bind("settings.colors.highlight");
+        background-color: var(--color-highlight);
         color: white;
         transform: translateY(-2px);
     }
@@ -74,7 +74,7 @@
                     
                     <div class="mb-3">
                         {{ form.site_title.label(class="form-label") }}
-                        {{ form.site_title(class="form-control") }}
+                        {{ form.site_title(class="form-control", id="site-title") }}
                         {% for error in form.site_title.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}
@@ -142,7 +142,7 @@
                     <div class="row mb-4">
                         <div class="col-md-6 mb-3">
                             {{ form.fonts.title.label(class="form-label") }}
-                            {{ form.fonts.title(class="form-select") }}
+                            {{ form.fonts.title(class="form-select", id="title-font") }}
                             {% for error in form.fonts.title.errors %}
                                 <div class="text-danger">{{ error }}</div>
                             {% endfor %}
@@ -150,7 +150,7 @@
                         
                         <div class="col-md-6 mb-3">
                             {{ form.fonts.body.label(class="form-label") }}
-                            {{ form.fonts.body(class="form-select") }}
+                            {{ form.fonts.body(class="form-select", id="body-font") }}
                             {% for error in form.fonts.body.errors %}
                                 <div class="text-danger">{{ error }}</div>
                             {% endfor %}
@@ -160,7 +160,7 @@
                     <div class="row mb-4">
                         <div class="col-md-6 mb-3">
                             {{ form.border_radius.label(class="form-label") }}
-                            {{ form.border_radius(class="form-control") }}
+                            {{ form.border_radius(class="form-control", id="border-radius") }}
                             <div class="form-text">Format: 12px, 1rem, etc.</div>
                             {% for error in form.border_radius.errors %}
                                 <div class="text-danger">{{ error }}</div>
@@ -169,7 +169,7 @@
                         
                         <div class="col-md-6 mb-3">
                             {{ form.footer_text.label(class="form-label") }}
-                            {{ form.footer_text(class="form-control") }}
+                            {{ form.footer_text(class="form-control", id="footer-text") }}
                             {% for error in form.footer_text.errors %}
                                 <div class="text-danger">{{ error }}</div>
                             {% endfor %}
@@ -194,9 +194,20 @@
                     backgroundColor: settings.colors.background,
                     borderRadius: settings.border_radius
                 }">
-                    <h3 class="preview-title">Titre d'exemple</h3>
-                    <p class="preview-text">Ceci est un exemple de texte pour montrer l'apparence des polices et des couleurs.</p>
-                    <button class="preview-button">Bouton d'exemple</button>
+                    <h3 class="preview-title" :style="{
+                        fontFamily: `'${settings.fonts.title}', sans-serif`,
+                        color: settings.colors.primary
+                    }">Titre d'exemple</h3>
+                    <p class="preview-text" :style="{
+                        fontFamily: `'${settings.fonts.body}', sans-serif`,
+                        color: settings.colors.secondary
+                    }">Ceci est un exemple de texte pour montrer l'apparence des polices et des couleurs.</p>
+                    <button class="preview-button" :style="{
+                        backgroundColor: settings.colors.accent,
+                        color: settings.colors.secondary,
+                        borderRadius: `calc(${settings.border_radius} * 0.5)`
+                    }" @mouseover="hoverButton = true" @mouseleave="hoverButton = false"
+                    :class="{ 'hover-state': hoverButton }">Bouton d'exemple</button>
                 </div>
                 
                 <div class="card mb-3">
@@ -282,7 +293,7 @@
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script>
     // Vue app for live preview
-    const { createApp, ref, watch } = Vue;
+    const { createApp, ref, watch, computed } = Vue;
     
     createApp({
         setup() {
@@ -301,8 +312,78 @@
                 border_radius: "{{ form.border_radius.data }}"
             });
             
+            const hoverButton = ref(false);
+            
+            // Watch input elements for changes to update the preview
+            const setupWatchers = () => {
+                const primaryColor = document.getElementById('primary-color');
+                if (primaryColor) {
+                    primaryColor.addEventListener('input', () => {
+                        settings.value.colors.primary = primaryColor.value;
+                        document.getElementById('preview-primary').style.backgroundColor = primaryColor.value;
+                    });
+                }
+                
+                const secondaryColor = document.getElementById('secondary-color');
+                if (secondaryColor) {
+                    secondaryColor.addEventListener('input', () => {
+                        settings.value.colors.secondary = secondaryColor.value;
+                        document.getElementById('preview-secondary').style.backgroundColor = secondaryColor.value;
+                    });
+                }
+                
+                const backgroundColor = document.getElementById('background-color');
+                if (backgroundColor) {
+                    backgroundColor.addEventListener('input', () => {
+                        settings.value.colors.background = backgroundColor.value;
+                        document.getElementById('preview-background').style.backgroundColor = backgroundColor.value;
+                    });
+                }
+                
+                const accentColor = document.getElementById('accent-color');
+                if (accentColor) {
+                    accentColor.addEventListener('input', () => {
+                        settings.value.colors.accent = accentColor.value;
+                        document.getElementById('preview-accent').style.backgroundColor = accentColor.value;
+                    });
+                }
+                
+                const highlightColor = document.getElementById('highlight-color');
+                if (highlightColor) {
+                    highlightColor.addEventListener('input', () => {
+                        settings.value.colors.highlight = highlightColor.value;
+                        document.getElementById('preview-highlight').style.backgroundColor = highlightColor.value;
+                    });
+                }
+                
+                const titleFont = document.getElementById('title-font');
+                if (titleFont) {
+                    titleFont.addEventListener('change', () => {
+                        settings.value.fonts.title = titleFont.value;
+                    });
+                }
+                
+                const bodyFont = document.getElementById('body-font');
+                if (bodyFont) {
+                    bodyFont.addEventListener('change', () => {
+                        settings.value.fonts.body = bodyFont.value;
+                    });
+                }
+                
+                const borderRadius = document.getElementById('border-radius');
+                if (borderRadius) {
+                    borderRadius.addEventListener('input', () => {
+                        settings.value.border_radius = borderRadius.value;
+                    });
+                }
+            };
+            
+            // Initialize watchers when component is mounted
+            setTimeout(setupWatchers, 100);
+            
             return {
-                settings
+                settings,
+                hoverButton
             };
         }
     }).mount('#preview-app');

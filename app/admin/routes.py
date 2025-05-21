@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, current_app, abort
+from flask import render_template, redirect, url_for, flash, request, current_app, abort, jsonify
 from flask_login import login_required, current_user
 from app.admin import admin
 from app.admin.forms import LoginForm, SectionForm, get_image_upload_form, SettingsForm
@@ -44,6 +44,23 @@ def dashboard():
     settings = Settings.get()
     return render_template('admin/dashboard.html', sections=sections, settings=settings)
 
+@admin.route('/sections/reorder', methods=['POST'])
+@admin_required
+def reorder_sections():
+    """Handle AJAX reordering of sections using drag-and-drop"""
+    try:
+        section_ids = request.json.get('sectionIds', [])
+        if not section_ids:
+            return jsonify({'success': False, 'message': 'Aucun ID de section fourni'}), 400
+            
+        success = Section.reorder(section_ids)
+        if success:
+            cache.clear()  # Vider le cache après modification
+            return jsonify({'success': True, 'message': 'Ordre mis à jour avec succès'})
+        return jsonify({'success': False, 'message': 'Erreur lors de la mise à jour de l\'ordre'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erreur: {str(e)}'}), 500
+
 @admin.route('/sections/<section_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_section(section_id):
@@ -58,8 +75,8 @@ def edit_section(section_id):
         data = {
             'title': form.title.data,
             'content': form.content.data,
-            'visible': form.visible.data,
-            'order': form.order.data
+            'visible': form.visible.data
+            # Removed 'order' field since we now use drag-and-drop
         }
         
         if Section.update(section_id, data):
@@ -72,7 +89,6 @@ def edit_section(section_id):
     form.title.data = section.get('title', '')
     form.content.data = section.get('content', '')
     form.visible.data = section.get('visible', True)
-    form.order.data = section.get('order', 0)
     
     # Créer le formulaire d'upload avec le contexte d'application actuel
     ImageUploadForm = get_image_upload_form()

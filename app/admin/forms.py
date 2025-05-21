@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SelectField, HiddenField, SubmitField, FloatField, FormField
+from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SelectField, HiddenField, SubmitField, FormField
 from wtforms.validators import DataRequired, Email, Length, Optional, Regexp
 from flask import current_app
 
@@ -14,7 +14,7 @@ class SectionForm(FlaskForm):
     title = StringField('Titre', validators=[DataRequired()])
     content = TextAreaField('Contenu', validators=[DataRequired()])
     visible = BooleanField('Visible', default=True)
-    order = FloatField('Ordre d\'affichage', validators=[DataRequired()])
+    # Removed order field
     submit = SubmitField('Enregistrer')
 
 # Définir une fonction qui crée le formulaire avec le contexte d'application
