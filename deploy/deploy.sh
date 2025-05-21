@@ -13,8 +13,8 @@ fi
 APP_NAME="temple-etretat"
 APP_PATH="/home/ubuntu/apps/$APP_NAME"
 LOG_PATH="$APP_PATH/logs"
-REPO_URL="<votre-repo-git>"  # Remplacer par votre URL de dépôt
-BRANCH="main"
+REPO_URL="https://github.com/thomasforapple/temple-etretat.git"  # Remplacer par votre URL de dépôt
+BRANCH="master"  # Remplacer par la branche souhaitée
 
 # Créer les dossiers nécessaires lors du déploiement initial
 if [ "$INITIAL" = true ]; then
