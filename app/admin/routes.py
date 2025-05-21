@@ -231,20 +231,24 @@ def edit_settings():
         print(f"Form data extracted: {data}")
         
         # Update settings
-        success = Settings.update(data)
-        if success:
-            # Clear the cache to ensure new settings are used
-            cache.clear()
-            flash('Paramètres mis à jour avec succès', 'success')
-            
-            # Force reload of settings from MongoDB to confirm changes are saved
-            updated_settings = Settings.get()
-            print(f"Reloaded settings after update: {updated_settings}")
-            
-            # Redirect to force a GET request and avoid form resubmission
-            return redirect(url_for('admin.edit_settings'))
-        else:
-            flash('Erreur lors de la mise à jour des paramètres', 'danger')
+        try:
+            success = Settings.update(data)
+            if success:
+                # Clear the cache to ensure new settings are used
+                cache.clear()
+                flash('Paramètres mis à jour avec succès', 'success')
+                
+                # Force reload of settings from MongoDB to confirm changes are saved
+                updated_settings = Settings.get()
+                print(f"Reloaded settings after update: {updated_settings}")
+                
+                # Redirect to force a GET request and avoid form resubmission
+                return redirect(url_for('admin.edit_settings'))
+            else:
+                flash('Erreur lors de la mise à jour des paramètres', 'danger')
+        except Exception as e:
+            print(f"Exception during settings update: {str(e)}")
+            flash(f'Exception lors de la mise à jour: {str(e)}', 'danger')
     
     # If form has errors, print them for debugging
     if form.errors:
@@ -265,7 +269,6 @@ def edit_settings():
         form.footer_text.data = settings.get('footer_text', 'Association du Temple d\'Etretat-debug')
     
     return render_template('admin/settings.html', form=form, settings=settings)
-
 @admin.route('/preview')
 @admin_required
 def preview():

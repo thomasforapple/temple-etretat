@@ -192,7 +192,9 @@ class Settings:
                     return True
                 else:
                     print("Settings update did not modify any documents")
-                    return False
+                    # Even if no documents were modified (because the values didn't change),
+                    # we consider it a success
+                    return True
             else:
                 # Insert new settings if none exist
                 result = current_app.mongo_db.settings.insert_one(data)
@@ -203,45 +205,4 @@ class Settings:
             print(f"Error updating settings: {str(e)}")
             import traceback
             traceback.print_exc()
-            return False
-    @staticmethod
-    def get():
-        settings = current_app.mongo_db.settings.find_one()
-        if not settings:
-            # Initialiser avec des valeurs par défaut
-            settings = {
-                'site_title': 'Temple d\'Etretat',
-                'colors': {
-                    'primary': '#3B5F7B',  # bleu gris mer
-                    'secondary': '#2F3A45',  # gris ardoise
-                    'background': '#EFE6DD',  # beige
-                    'accent': '#A3BFA8',  # vert nature 
-                    'highlight': '#b04101'  # orange brique
-                },
-                'fonts': {
-                    'title': 'Rubik',
-                    'body': 'Nunito'
-                },
-                'border_radius': '12px',
-                'logo': '',
-                'footer_text': 'Association du Temple d\'Etretat'
-            }
-            current_app.mongo_db.settings.insert_one(settings)
-        
-        return settings
-    
-    @staticmethod
-    def update(data):
-        try:
-            settings = current_app.mongo_db.settings.find_one()
-            if settings:
-                current_app.mongo_db.settings.update_one(
-                    {'_id': settings['_id']},
-                    {'$set': data}
-                )
-            else:
-                current_app.mongo_db.settings.insert_one(data)
-            return True
-        except Exception as e:
-            print(f"Error updating settings: {str(e)}")
             return False
