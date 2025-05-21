@@ -250,7 +250,7 @@ def edit_settings():
             print(f"Exception during settings update: {str(e)}")
             flash(f'Exception lors de la mise à jour: {str(e)}', 'danger')
     
-    # If form has errors, print them for debugging
+    # If form has errors, print them for debdugging
     if form.errors:
         print(f"Form validation errors: {form.errors}")
     
