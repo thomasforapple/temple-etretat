@@ -1,0 +1,165 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Modifier l'image - Administration Temple d'Etretat{% endblock %}
+
+{% block extra_head %}
+<style>
+    .image-preview {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .preview-container {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Modifier l'image</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.edit_section', section_id=section._id) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la section
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Propriétés de l'image
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.alt_text.label(class="form-label") }}
+                        {{ form.alt_text(class="form-control") }}
+                        {% for error in form.alt_text.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.caption.label(class="form-label") }}
+                        {{ form.caption(class="form-control") }}
+                        {% for error in form.caption.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5>Options d'affichage</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.size.label(class="form-label") }}
+                            {{ form.size(class="form-select", onchange="updatePreview()") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.alignment.label(class="form-label") }}
+                            {{ form.alignment(class="form-select", onchange="updatePreview()") }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.shape.label(class="form-label") }}
+                        {{ form.shape(class="form-select", onchange="updatePreview()") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.link_url.label(class="form-label") }}
+                        {{ form.link_url(class="form-control", placeholder="https://...") }}
+                        <div class="form-text">L'image sera cliquable si une URL est fournie</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.gallery_group.label(class="form-label") }}
+                        {{ form.gallery_group(class="form-control", placeholder="Ex: expo2024") }}
+                        <div class="form-text">Les images avec le même groupe seront affichées dans une galerie</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Aperçu
+            </div>
+            <div class="card-body">
+                <div class="preview-container">
+                    <div id="preview-wrapper" style="text-align: center;">
+                        <img src="{{ image.path }}" 
+                             alt="{{ image.alt_text }}" 
+                             id="preview-image"
+                             class="image-preview">
+                        <p id="preview-caption" class="mt-2 text-muted">{{ image.caption }}</p>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> L'aperçu montre comment l'image apparaîtra sur le site avec les options sélectionnées.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updatePreview() {
+        const size = document.getElementById('size').value;
+        const alignment = document.getElementById('alignment').value;
+        const shape = document.getElementById('shape').value;
+        
+        const previewWrapper = document.getElementById('preview-wrapper');
+        const previewImage = document.getElementById('preview-image');
+        
+        // Update alignment
+        previewWrapper.style.textAlign = alignment;
+        
+        // Update size
+        const sizeMap = {
+            'small': '25%',
+            'medium': '50%',
+            'large': '75%',
+            'full': '100%'
+        };
+        previewImage.style.width = sizeMap[size];
+        previewImage.style.height = 'auto';
+        
+        // Update shape
+        previewImage.className = 'image-preview';
+        if (shape === 'rounded') {
+            previewImage.style.borderRadius = '{{ settings.border_radius }}';
+        } else if (shape === 'circle') {
+            previewImage.style.borderRadius = '50%';
+        } else if (shape === 'shadow') {
+            previewImage.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
+        } else {
+            previewImage.style.borderRadius = '0';
+            previewImage.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        }
+    }
+    
+    // Initialize preview on load
+    document.addEventListener('DOMContentLoaded', updatePreview);
+</script>
+{% endblock %}

@@ -143,6 +143,35 @@ class Section:
             return True
         except:
             return False
+    
+    @staticmethod
+    def update_image(section_id, image_id, updated_data):
+        """Update specific image properties within a section"""
+        try:
+            # First get the section
+            section = current_app.mongo_db.sections.find_one({'_id': ObjectId(section_id)})
+            if not section:
+                return False
+            
+            # Find and update the specific image
+            images = section.get('images', [])
+            for i, img in enumerate(images):
+                if img.get('id') == image_id:
+                    # Update only the specified fields
+                    for key, value in updated_data.items():
+                        images[i][key] = value
+                    break
+            
+            # Update the entire images array
+            current_app.mongo_db.sections.update_one(
+                {'_id': ObjectId(section_id)},
+                {'$set': {'images': images}}
+            )
+            return True
+        except Exception as e:
+            print(f"Error updating image: {str(e)}")
+            return False
+
 class Settings:
     @staticmethod
     def get():
@@ -173,9 +202,6 @@ class Settings:
     @staticmethod
     def update(data):
         try:
-            # Add debugging info
-            print(f"Updating settings with data: {data}")
-            
             # Find existing settings
             settings = current_app.mongo_db.settings.find_one()
             
@@ -185,18 +211,12 @@ class Settings:
                     {'_id': settings['_id']},
                     {'$set': data}
                 )
-                
-                # Check if update was successful
-                print(f"Update operation details: matched={result.matched_count}, modified={result.modified_count}")
                 return True
             else:
                 # Insert new settings if none exist
                 result = current_app.mongo_db.settings.insert_one(data)
-                print(f"New settings created with ID: {result.inserted_id}")
                 return True
                 
         except Exception as e:
             print(f"Error updating settings: {str(e)}")
-            import traceback
-            traceback.print_exc()
             return False

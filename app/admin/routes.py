@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, current_app, abort, jsonify
 from flask_login import login_required, current_user
 from app.admin import admin
-from app.admin.forms import LoginForm, SectionForm, get_image_upload_form, SettingsForm
+from app.admin.forms import LoginForm, SectionForm, get_image_upload_form, get_image_edit_form, SettingsForm
 from app.models import Section, Settings, User
 from app.auth import admin_login, admin_logout, admin_required
 from app import cache
@@ -76,7 +76,6 @@ def edit_section(section_id):
             'title': form.title.data,
             'content': form.content.data,
             'visible': form.visible.data
-            # Removed 'order' field since we now use drag-and-drop
         }
         
         if Section.update(section_id, data):
@@ -138,13 +137,18 @@ def upload_image(section_id):
             # Sauvegarder avec optimisation
             img.save(file_path, format=format_to_save, quality=85, optimize=True)
             
-            # Créer le dictionnaire d'image
+            # Créer le dictionnaire d'image avec les nouvelles options
             image_data = {
                 'id': uuid.uuid4().hex,
                 'filename': unique_filename,
                 'path': f'/uploads/{unique_filename}',
                 'alt_text': form.alt_text.data,
                 'caption': form.caption.data,
+                'size': form.size.data,
+                'alignment': form.alignment.data,
+                'shape': form.shape.data,
+                'link_url': form.link_url.data or None,
+                'gallery_group': form.gallery_group.data or None,
                 'uploaded_at': datetime.datetime.now()
             }
             
@@ -165,6 +169,60 @@ def upload_image(section_id):
             flash(f'{getattr(form, field).label.text}: {error}', 'danger')
     
     return redirect(url_for('admin.edit_section', section_id=section_id))
+
+@admin.route('/sections/<section_id>/images/<image_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_image(section_id, image_id):
+    """Edit image properties"""
+    section = Section.get_by_id(section_id)
+    if not section:
+        flash('Section non trouvée', 'danger')
+        return redirect(url_for('admin.dashboard'))
+    
+    # Trouver l'image
+    image = None
+    for img in section.get('images', []):
+        if img.get('id') == image_id:
+            image = img
+            break
+    
+    if not image:
+        flash('Image non trouvée', 'danger')
+        return redirect(url_for('admin.edit_section', section_id=section_id))
+    
+    ImageEditForm = get_image_edit_form()
+    form = ImageEditForm()
+    
+    if form.validate_on_submit():
+        # Mettre à jour les propriétés de l'image
+        updated_data = {
+            'alt_text': form.alt_text.data,
+            'caption': form.caption.data,
+            'size': form.size.data,
+            'alignment': form.alignment.data,
+            'shape': form.shape.data,
+            'link_url': form.link_url.data or None,
+            'gallery_group': form.gallery_group.data or None
+        }
+        
+        if Section.update_image(section_id, image_id, updated_data):
+            cache.clear()
+            flash('Image mise à jour avec succès', 'success')
+            return redirect(url_for('admin.edit_section', section_id=section_id))
+        else:
+            flash('Erreur lors de la mise à jour de l\'image', 'danger')
+    
+    # Pré-remplir le formulaire
+    if not form.is_submitted():
+        form.alt_text.data = image.get('alt_text', '')
+        form.caption.data = image.get('caption', '')
+        form.size.data = image.get('size', 'medium')
+        form.alignment.data = image.get('alignment', 'center')
+        form.shape.data = image.get('shape', 'default')
+        form.link_url.data = image.get('link_url', '')
+        form.gallery_group.data = image.get('gallery_group', '')
+    
+    return render_template('admin/edit_image.html', form=form, section=section, image=image)
 
 @admin.route('/sections/<section_id>/images/<image_id>/remove', methods=['POST'])
 @admin_required
@@ -209,7 +267,6 @@ def edit_settings():
     settings = Settings.get()
     
     if form.validate_on_submit():
-        print("Form validated, processing submission...")
         data = {
             'site_title': form.site_title.data,
             'colors': {
@@ -227,36 +284,19 @@ def edit_settings():
             'footer_text': form.footer_text.data
         }
         
-        # Add debugging output
-        print(f"Form data extracted: {data}")
-        
-        # Update settings
         try:
             success = Settings.update(data)
             if success:
-                # Clear the cache to ensure new settings are used
                 cache.clear()
                 flash('Paramètres mis à jour avec succès', 'success')
-                
-                # Force reload of settings from MongoDB to confirm changes are saved
-                updated_settings = Settings.get()
-                print(f"Reloaded settings after update: {updated_settings}")
-                
-                # Redirect to force a GET request and avoid form resubmission
                 return redirect(url_for('admin.edit_settings'))
             else:
                 flash('Erreur lors de la mise à jour des paramètres', 'danger')
         except Exception as e:
-            print(f"Exception during settings update: {str(e)}")
             flash(f'Exception lors de la mise à jour: {str(e)}', 'danger')
-    
-    # If form has errors, print them for debdugging
-    if form.errors:
-        print(f"Form validation errors: {form.errors}")
     
     # Pré-remplir le formulaire avec les valeurs actuelles
     if not form.is_submitted():
-        print("Pre-filling form with current settings...")
         form.site_title.data = settings.get('site_title', '')
         form.colors.primary.data = settings.get('colors', {}).get('primary', '#3B5F7B')
         form.colors.secondary.data = settings.get('colors', {}).get('secondary', '#2F3A45')
@@ -266,9 +306,10 @@ def edit_settings():
         form.fonts.title.data = settings.get('fonts', {}).get('title', 'Rubik')
         form.fonts.body.data = settings.get('fonts', {}).get('body', 'Nunito')
         form.border_radius.data = settings.get('border_radius', '12px')
-        form.footer_text.data = settings.get('footer_text', 'Association du Temple d\'Etretat-debug')
+        form.footer_text.data = settings.get('footer_text', 'Association du Temple d\'Etretat')
     
     return render_template('admin/settings.html', form=form, settings=settings)
+
 @admin.route('/preview')
 @admin_required
 def preview():

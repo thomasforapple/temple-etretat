@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SelectField, HiddenField, SubmitField, FormField, Form
-from wtforms.validators import DataRequired, Email, Length, Optional, Regexp
+from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SelectField, HiddenField, SubmitField, FormField, Form, IntegerField
+from wtforms.validators import DataRequired, Email, Length, Optional, Regexp, NumberRange
 from flask import current_app
 
 class LoginForm(FlaskForm):
@@ -14,7 +14,6 @@ class SectionForm(FlaskForm):
     title = StringField('Titre', validators=[DataRequired()])
     content = TextAreaField('Contenu', validators=[DataRequired()])
     visible = BooleanField('Visible', default=True)
-    # Removed order field
     submit = SubmitField('Enregistrer')
 
 # Définir une fonction qui crée le formulaire avec le contexte d'application
@@ -27,9 +26,70 @@ def get_image_upload_form():
         ])
         alt_text = StringField('Texte alternatif', validators=[DataRequired()])
         caption = StringField('Légende', validators=[Optional()])
+        
+        # Options avancées d'affichage
+        size = SelectField('Taille', choices=[
+            ('small', 'Petite (25%)'),
+            ('medium', 'Moyenne (50%)'),
+            ('large', 'Grande (75%)'),
+            ('full', 'Pleine largeur (100%)')
+        ], default='medium')
+        
+        alignment = SelectField('Alignement', choices=[
+            ('left', 'Gauche'),
+            ('center', 'Centre'),
+            ('right', 'Droite')
+        ], default='center')
+        
+        shape = SelectField('Forme', choices=[
+            ('default', 'Par défaut'),
+            ('rounded', 'Arrondie'),
+            ('circle', 'Cercle'),
+            ('shadow', 'Avec ombre')
+        ], default='default')
+        
+        link_url = StringField('URL du lien (optionnel)', validators=[Optional()])
+        
+        # Options pour galerie
+        gallery_group = StringField('Groupe de galerie', validators=[Optional()], 
+                                  description='Images avec le même nom de groupe seront dans la même galerie')
+        
         submit = SubmitField('Télécharger')
     
     return ImageUploadForm
+
+# Pour éditer une image existante
+def get_image_edit_form():
+    class ImageEditForm(FlaskForm):
+        alt_text = StringField('Texte alternatif', validators=[DataRequired()])
+        caption = StringField('Légende', validators=[Optional()])
+        
+        size = SelectField('Taille', choices=[
+            ('small', 'Petite (25%)'),
+            ('medium', 'Moyenne (50%)'),
+            ('large', 'Grande (75%)'),
+            ('full', 'Pleine largeur (100%)')
+        ])
+        
+        alignment = SelectField('Alignement', choices=[
+            ('left', 'Gauche'),
+            ('center', 'Centre'),
+            ('right', 'Droite')
+        ])
+        
+        shape = SelectField('Forme', choices=[
+            ('default', 'Par défaut'),
+            ('rounded', 'Arrondie'),
+            ('circle', 'Cercle'),
+            ('shadow', 'Avec ombre')
+        ])
+        
+        link_url = StringField('URL du lien (optionnel)', validators=[Optional()])
+        gallery_group = StringField('Groupe de galerie', validators=[Optional()])
+        
+        submit = SubmitField('Mettre à jour')
+    
+    return ImageEditForm
 
 # Change from FlaskForm to Form for subforms
 class ColorForm(Form):

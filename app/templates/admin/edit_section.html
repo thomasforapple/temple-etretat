@@ -15,10 +15,53 @@
     
     .image-card {
         transition: transform 0.2s ease;
+        position: relative;
     }
     
     .image-card:hover {
         transform: translateY(-5px);
+    }
+    
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 5px;
+        font-size: 0.8rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .image-card:hover .image-overlay {
+        opacity: 1;
+    }
+    
+    .advanced-options {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 15px;
+    }
+    
+    .color-palette {
+        display: flex;
+        gap: 5px;
+        margin-top: 10px;
+    }
+    
+    .color-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        border: 2px solid transparent;
+        cursor: pointer;
+    }
+    
+    .color-btn:hover, .color-btn.active {
+        border-color: #333;
     }
 </style>
 {% endblock %}
@@ -53,6 +96,23 @@
                     
                     <div class="mb-3">
                         {{ form.content.label(class="form-label") }}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Utilisez l'éditeur ci-dessous pour formater votre texte. 
+                            Vous pouvez ajouter des couleurs, des styles, des listes, des tableaux et plus encore.
+                        </div>
+                        
+                        <!-- Palette de couleurs rapide -->
+                        <div class="color-palette mb-2">
+                            <button type="button" class="color-btn" style="background-color: {{ settings.colors.primary }}" 
+                                    onclick="applyColor('{{ settings.colors.primary }}')" title="Couleur primaire"></button>
+                            <button type="button" class="color-btn" style="background-color: {{ settings.colors.secondary }}" 
+                                    onclick="applyColor('{{ settings.colors.secondary }}')" title="Couleur secondaire"></button>
+                            <button type="button" class="color-btn" style="background-color: {{ settings.colors.accent }}" 
+                                    onclick="applyColor('{{ settings.colors.accent }}')" title="Couleur d'accent"></button>
+                            <button type="button" class="color-btn" style="background-color: {{ settings.colors.highlight }}" 
+                                    onclick="applyColor('{{ settings.colors.highlight }}')" title="Couleur de surbrillance"></button>
+                        </div>
+                        
                         {{ form.content(id="summernote", class="form-control") }}
                         {% for error in form.content.errors %}
                             <div class="text-danger">{{ error }}</div>
@@ -78,7 +138,7 @@
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-header">
-                Gestion des images
+                <i class="bi bi-image"></i> Ajouter une image
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('admin.upload_image', section_id=section._id) }}" enctype="multipart/form-data">
@@ -86,11 +146,12 @@
                     
                     <div class="mb-3">
                         {{ upload_form.image.label(class="form-label") }}
-                        {{ upload_form.image(class="form-control") }}
+                        {{ upload_form.image(class="form-control", onchange="previewImage(this)") }}
                         <div class="form-text">Formats acceptés: jpg, jpeg, png, gif, svg, webp</div>
                         {% for error in upload_form.image.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}
+                        <div id="image-preview" class="mt-2"></div>
                     </div>
                     
                     <div class="mb-3">
@@ -111,7 +172,40 @@
                         {% endfor %}
                     </div>
                     
-                    <div class="d-grid">
+                    <!-- Options avancées -->
+                    <div class="advanced-options">
+                        <h6><i class="bi bi-gear"></i> Options d'affichage</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                {{ upload_form.size.label(class="form-label small") }}
+                                {{ upload_form.size(class="form-select form-select-sm") }}
+                            </div>
+                            
+                            <div class="col-md-6 mb-2">
+                                {{ upload_form.alignment.label(class="form-label small") }}
+                                {{ upload_form.alignment(class="form-select form-select-sm") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            {{ upload_form.shape.label(class="form-label small") }}
+                            {{ upload_form.shape(class="form-select form-select-sm") }}
+                        </div>
+                        
+                        <div class="mb-2">
+                            {{ upload_form.link_url.label(class="form-label small") }}
+                            {{ upload_form.link_url(class="form-control form-control-sm", placeholder="https://...") }}
+                        </div>
+                        
+                        <div class="mb-2">
+                            {{ upload_form.gallery_group.label(class="form-label small") }}
+                            {{ upload_form.gallery_group(class="form-control form-control-sm", placeholder="Ex: expo2024") }}
+                            <div class="form-text small">{{ upload_form.gallery_group.description }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mt-3">
                         {{ upload_form.submit(class="btn btn-success") }}
                     </div>
                 </form>
@@ -128,14 +222,29 @@
                     {% for image in section.images %}
                     <div class="col-md-6 mb-3">
                         <div class="card image-card">
+                            <div class="image-overlay">
+                                <strong>{{ image.size|default('medium') }}</strong> | 
+                                {{ image.alignment|default('center') }}
+                                {% if image.gallery_group %}
+                                    <br><i class="bi bi-images"></i> {{ image.gallery_group }}
+                                {% endif %}
+                            </div>
                             <img src="{{ image.path }}" alt="{{ image.alt_text }}" class="image-thumbnail card-img-top">
                             <div class="card-body p-2">
                                 <p class="card-text small mb-1">{{ image.alt_text|truncate(20) }}</p>
-                                <form method="POST" action="{{ url_for('admin.remove_image', section_id=section._id, image_id=image.id) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette image ?');">
-                                    <button type="submit" class="btn btn-danger btn-sm w-100">
-                                        <i class="bi bi-trash"></i> Supprimer
-                                    </button>
-                                </form>
+                                <div class="btn-group btn-group-sm w-100" role="group">
+                                    <a href="{{ url_for('admin.edit_image', section_id=section._id, image_id=image.id) }}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('admin.remove_image', section_id=section._id, image_id=image.id) }}" 
+                                          style="display: inline-block; width: 50%;"
+                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette image ?');">
+                                        <button type="submit" class="btn btn-outline-danger w-100">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -150,22 +259,62 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-fr-FR.min.js"></script>
 <script>
     $(document).ready(function() {
         $('#summernote').summernote({
             placeholder: 'Contenu de la section...',
             tabsize: 2,
-            height: 300,
+            height: 400,
+            lang: 'fr-FR',
             toolbar: [
                 ['style', ['style']],
-                ['font', ['bold', 'underline', 'clear']],
+                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
+                ['fontname', ['fontname']],
+                ['fontsize', ['fontsize']],
                 ['color', ['color']],
                 ['para', ['ul', 'ol', 'paragraph']],
+                ['height', ['height']],
                 ['table', ['table']],
-                ['insert', ['link']],
+                ['insert', ['link', 'hr']],
                 ['view', ['fullscreen', 'codeview', 'help']]
-            ]
+            ],
+            fontNames: [
+                '{{ settings.fonts.body }}', '{{ settings.fonts.title }}',
+                'Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana'
+            ],
+            fontNamesIgnoreCheck: ['{{ settings.fonts.body }}', '{{ settings.fonts.title }}'],
+            colors: [
+                ['{{ settings.colors.primary }}', '{{ settings.colors.secondary }}', '{{ settings.colors.accent }}', '{{ settings.colors.highlight }}'],
+                ['#000000', '#424242', '#636363', '#9C9C94', '#CEC6CE', '#EFEFEF', '#F7F7F7', '#FFFFFF'],
+                ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF'],
+                ['#F7C6CE', '#FFE7CE', '#FFEFC6', '#D6EFD6', '#CEDEE7', '#CEE7F7', '#D6D6E7', '#E7D6DE'],
+                ['#E79C9C', '#FFC69C', '#FFE79C', '#B5D6A5', '#A5C6CE', '#9CC6EF', '#B5A5D6', '#D6A5BD'],
+                ['#E76363', '#F7AD6B', '#FFD663', '#94BD7B', '#73A5AD', '#6BADDE', '#8C7BC6', '#C67BA5'],
+                ['#CE0000', '#E79439', '#EFC631', '#6BA54A', '#4A7B8C', '#3984C6', '#634AA5', '#A54A7B'],
+                ['#9C0000', '#B56308', '#BD9400', '#397B21', '#104A5A', '#085294', '#311873', '#731842']
+            ],
+            callbacks: {
+                onImageUpload: function(files) {
+                    // Custom image upload handler if needed
+                }
+            }
         });
     });
+    
+    function applyColor(color) {
+        $('#summernote').summernote('foreColor', color);
+    }
+    
+    function previewImage(input) {
+        const preview = document.getElementById('image-preview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">`;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 </script>
 {% endblock %}

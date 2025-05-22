@@ -8,22 +8,146 @@
                 {{ section.content | safe }}
                 
                 {% if section.images and section.images|length > 0 %}
-                    <div class="image-gallery">
-                        {% for image in section.images %}
+                    {% set gallery_groups = {} %}
+                    {% set standalone_images = [] %}
+                    
+                    {# Séparer les images par groupe de galerie #}
+                    {% for image in section.images %}
+                        {% if image.gallery_group %}
+                            {% if image.gallery_group not in gallery_groups %}
+                                {% set _ = gallery_groups.update({image.gallery_group: []}) %}
+                            {% endif %}
+                            {% set _ = gallery_groups[image.gallery_group].append(image) %}
+                        {% else %}
+                            {% set _ = standalone_images.append(image) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {# Afficher les images standalone #}
+                    {% for image in standalone_images %}
+                        <div class="image-container image-{{ image.alignment|default('center') }} image-{{ image.size|default('medium') }}">
                             <figure>
-                                <img 
-                                    src="{{ image.path }}" 
-                                    alt="{{ image.alt_text }}" 
-                                    class="gallery-image"
-                                >
+                                {% if image.link_url %}
+                                <a href="{{ image.link_url }}" target="_blank">
+                                {% endif %}
+                                    <img 
+                                        src="{{ image.path }}" 
+                                        alt="{{ image.alt_text }}" 
+                                        class="content-image image-{{ image.shape|default('default') }}"
+                                    >
+                                {% if image.link_url %}
+                                </a>
+                                {% endif %}
                                 {% if image.caption %}
                                     <figcaption class="image-caption">{{ image.caption }}</figcaption>
                                 {% endif %}
                             </figure>
-                        {% endfor %}
-                    </div>
+                        </div>
+                    {% endfor %}
+                    
+                    {# Afficher les galeries #}
+                    {% for group_name, group_images in gallery_groups.items() %}
+                        <div class="image-gallery" data-gallery="{{ group_name }}">
+                            {% for image in group_images %}
+                                <div class="gallery-item">
+                                    <figure>
+                                        <img 
+                                            src="{{ image.path }}" 
+                                            alt="{{ image.alt_text }}" 
+                                            class="gallery-image image-{{ image.shape|default('default') }}"
+                                            onclick="openLightbox('{{ group_name }}', {{ loop.index0 }})"
+                                        >
+                                        {% if image.caption %}
+                                            <figcaption class="image-caption">{{ image.caption }}</figcaption>
+                                        {% endif %}
+                                    </figure>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
                 {% endif %}
             </div>
         </section>
     {% endfor %}
+    
+    {# Lightbox pour les galeries #}
+    <div id="lightbox" class="lightbox">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+        <a class="lightbox-prev" onclick="changeSlide(-1)">&#10094;</a>
+        <a class="lightbox-next" onclick="changeSlide(1)">&#10095;</a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentGallery = null;
+    let currentIndex = 0;
+    let galleries = {};
+    
+    // Initialize galleries
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.image-gallery').forEach(gallery => {
+            const galleryName = gallery.dataset.gallery;
+            galleries[galleryName] = [];
+            gallery.querySelectorAll('.gallery-image').forEach(img => {
+                galleries[galleryName].push({
+                    src: img.src,
+                    alt: img.alt,
+                    caption: img.parentElement.querySelector('.image-caption')?.textContent || ''
+                });
+            });
+        });
+    });
+    
+    function openLightbox(gallery, index) {
+        currentGallery = gallery;
+        currentIndex = index;
+        showSlide();
+        document.getElementById('lightbox').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeLightbox() {
+        document.getElementById('lightbox').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    function changeSlide(n) {
+        currentIndex += n;
+        showSlide();
+    }
+    
+    function showSlide() {
+        const gallery = galleries[currentGallery];
+        if (!gallery) return;
+        
+        if (currentIndex >= gallery.length) currentIndex = 0;
+        if (currentIndex < 0) currentIndex = gallery.length - 1;
+        
+        const image = gallery[currentIndex];
+        document.getElementById('lightbox-img').src = image.src;
+        document.getElementById('lightbox-img').alt = image.alt;
+        document.getElementById('lightbox-caption').textContent = image.caption;
+        
+        // Show/hide navigation arrows
+        document.querySelector('.lightbox-prev').style.display = gallery.length > 1 ? 'block' : 'none';
+        document.querySelector('.lightbox-next').style.display = gallery.length > 1 ? 'block' : 'none';
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('lightbox').style.display === 'block') {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            else if (e.key === 'ArrowRight') changeSlide(1);
+            else if (e.key === 'Escape') closeLightbox();
+        }
+    });
+    
+    // Close lightbox on click outside
+    document.getElementById('lightbox').addEventListener('click', function(e) {
+        if (e.target === this) closeLightbox();
+    });
+</script>
 {% endblock %}
