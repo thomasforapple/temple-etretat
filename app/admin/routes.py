@@ -92,11 +92,15 @@ def edit_section(section_id):
     # Créer le formulaire d'upload avec le contexte d'application actuel
     ImageUploadForm = get_image_upload_form()
     
+    # Récupérer les settings pour les passer au template
+    settings = Settings.get()
+    
     return render_template(
         'admin/edit_section.html', 
         form=form, 
         section=section,
-        upload_form=ImageUploadForm()
+        upload_form=ImageUploadForm(),
+        settings=settings  # Ajout des settings ici
     )
 
 @admin.route('/sections/<section_id>/images', methods=['POST'])
@@ -222,7 +226,10 @@ def edit_image(section_id, image_id):
         form.link_url.data = image.get('link_url', '')
         form.gallery_group.data = image.get('gallery_group', '')
     
-    return render_template('admin/edit_image.html', form=form, section=section, image=image)
+    # Récupérer les settings
+    settings = Settings.get()
+    
+    return render_template('admin/edit_image.html', form=form, section=section, image=image, settings=settings)
 
 @admin.route('/sections/<section_id>/images/<image_id>/remove', methods=['POST'])
 @admin_required
