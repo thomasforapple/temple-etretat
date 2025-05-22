@@ -3,7 +3,6 @@
 {% block title %}Tableau de bord - Administration Temple d'Etretat{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/modular/sortable.css">
 <style>
     .draggable-table tbody tr {
         cursor: move;
@@ -22,6 +21,42 @@
     .sort-handle:hover {
         color: #6c757d;
     }
+    
+    /* Styles responsive pour le tableau */
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+        
+        .table td, .table th {
+            padding: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .color-preview {
+            width: 20px;
+            height: 20px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        /* Masquer certaines colonnes sur mobile */
+        .d-none-mobile {
+            display: none !important;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        h1.h2 {
+            font-size: 1.5rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -31,19 +66,20 @@
 </div>
 
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-12">
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Sections du site</span>
                 <div>
                     <button id="save-order-btn" class="btn btn-sm btn-success d-none">
-                        <i class="bi bi-save"></i> Enregistrer l'ordre
+                        <i class="bi bi-save"></i> <span class="d-none d-sm-inline">Enregistrer l'ordre</span>
                     </button>
                 </div>
             </div>
             <div class="card-body">
                 <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> Glissez-déposez les lignes pour réorganiser les sections.
+                    <i class="bi bi-info-circle"></i> <span class="d-none d-sm-inline">Glissez-déposez les lignes pour réorganiser les sections.</span>
+                    <span class="d-inline d-sm-none">Glissez pour réorganiser.</span>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
@@ -51,9 +87,9 @@
                             <tr>
                                 <th width="50"></th>
                                 <th>Titre</th>
-                                <th>Nom</th>
-                                <th>Visibilité</th>
-                                <th>Images</th>
+                                <th class="d-none d-md-table-cell">Nom</th>
+                                <th class="d-none d-sm-table-cell">Visibilité</th>
+                                <th class="d-none d-lg-table-cell">Images</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -62,18 +98,18 @@
                             <tr data-id="{{ section._id }}">
                                 <td class="sort-handle"><i class="bi bi-grip-vertical"></i></td>
                                 <td>{{ section.title }}</td>
-                                <td>{{ section.name }}</td>
-                                <td>
+                                <td class="d-none d-md-table-cell">{{ section.name }}</td>
+                                <td class="d-none d-sm-table-cell">
                                     {% if section.visible %}
                                         <span class="badge bg-success">Visible</span>
                                     {% else %}
                                         <span class="badge bg-danger">Masquée</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ section.images|length if section.images else 0 }}</td>
+                                <td class="d-none d-lg-table-cell">{{ section.images|length if section.images else 0 }}</td>
                                 <td>
                                     <a href="{{ url_for('admin.edit_section', section_id=section._id) }}" class="btn btn-sm btn-primary">
-                                        <i class="bi bi-pencil"></i> Éditer
+                                        <i class="bi bi-pencil"></i> <span class="d-none d-md-inline">Éditer</span>
                                     </a>
                                 </td>
                             </tr>
@@ -87,8 +123,8 @@
 </div>
 
 <div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
+    <div class="col-12 col-lg-6 mb-4">
+        <div class="card h-100">
             <div class="card-header">
                 Paramètres du site
             </div>
@@ -97,25 +133,25 @@
                 
                 <p><strong>Couleurs :</strong></p>
                 <ul class="list-unstyled">
-                    <li>
-                        <span class="color-preview" style="background-color: {{ settings.colors.primary }};"></span>
-                        Primaire : {{ settings.colors.primary }}
+                    <li class="mb-1">
+                        <span class="color-preview d-inline-block align-middle" style="background-color: {{ settings.colors.primary }};"></span>
+                        <span class="align-middle">Primaire : {{ settings.colors.primary }}</span>
                     </li>
-                    <li>
-                        <span class="color-preview" style="background-color: {{ settings.colors.secondary }};"></span>
-                        Secondaire : {{ settings.colors.secondary }}
+                    <li class="mb-1">
+                        <span class="color-preview d-inline-block align-middle" style="background-color: {{ settings.colors.secondary }};"></span>
+                        <span class="align-middle">Secondaire : {{ settings.colors.secondary }}</span>
                     </li>
-                    <li>
-                        <span class="color-preview" style="background-color: {{ settings.colors.background }};"></span>
-                        Fond : {{ settings.colors.background }}
+                    <li class="mb-1">
+                        <span class="color-preview d-inline-block align-middle" style="background-color: {{ settings.colors.background }};"></span>
+                        <span class="align-middle">Fond : {{ settings.colors.background }}</span>
                     </li>
-                    <li>
-                        <span class="color-preview" style="background-color: {{ settings.colors.accent }};"></span>
-                        Accent : {{ settings.colors.accent }}
+                    <li class="mb-1">
+                        <span class="color-preview d-inline-block align-middle" style="background-color: {{ settings.colors.accent }};"></span>
+                        <span class="align-middle">Accent : {{ settings.colors.accent }}</span>
                     </li>
-                    <li>
-                        <span class="color-preview" style="background-color: {{ settings.colors.highlight }};"></span>
-                        Surbrillance : {{ settings.colors.highlight }}
+                    <li class="mb-1">
+                        <span class="color-preview d-inline-block align-middle" style="background-color: {{ settings.colors.highlight }};"></span>
+                        <span class="align-middle">Surbrillance : {{ settings.colors.highlight }}</span>
                     </li>
                 </ul>
                 
@@ -134,13 +170,13 @@
         </div>
     </div>
     
-    <div class="col-md-6">
-        <div class="card mb-4">
+    <div class="col-12 col-lg-6 mb-4">
+        <div class="card h-100">
             <div class="card-header">
                 Actions rapides
             </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
+            <div class="card-body d-flex flex-column">
+                <div class="d-grid gap-2 flex-grow-1">
                     <a href="{{ url_for('admin.preview') }}" target="_blank" class="btn btn-success">
                         <i class="bi bi-eye"></i> Prévisualiser le site
                     </a>
@@ -186,7 +222,7 @@
             
             // Show loading state
             saveOrderBtn.disabled = true;
-            saveOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enregistrement...';
+            saveOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> <span class="d-none d-sm-inline">Enregistrement...</span>';
             
             // Send order to server
             fetch('{{ url_for("admin.reorder_sections") }}', {
@@ -236,7 +272,7 @@
             .finally(() => {
                 // Reset button state
                 saveOrderBtn.disabled = false;
-                saveOrderBtn.innerHTML = '<i class="bi bi-save"></i> Enregistrer l\'ordre';
+                saveOrderBtn.innerHTML = '<i class="bi bi-save"></i> <span class="d-none d-sm-inline">Enregistrer l\'ordre</span>';
             });
         });
         
