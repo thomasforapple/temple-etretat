@@ -3,7 +3,8 @@
 {% block title %}Modifier la section {{ section.title }} - Administration Temple d'Etretat{% endblock %}
 
 {% block extra_head %}
-<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.css" rel="stylesheet">
+<!-- TinyMCE 6 -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <style>
     .image-thumbnail {
         max-width: 150px;
@@ -50,6 +51,7 @@
         display: flex;
         gap: 5px;
         margin-top: 10px;
+        flex-wrap: wrap;
     }
     
     .color-btn {
@@ -58,29 +60,141 @@
         border-radius: 5px;
         border: 2px solid transparent;
         cursor: pointer;
+        transition: all 0.2s ease;
     }
     
     .color-btn:hover, .color-btn.active {
         border-color: #333;
+        transform: scale(1.1);
+    }
+    
+    .editor-stats {
+        background: #e9ecef;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .custom-styles-panel {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .style-preview {
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #dee2e6;
+        border-radius: 3px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .style-preview:hover {
+        border-color: {{ settings.colors.primary }};
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Custom TinyMCE styles to match site theme */
+    .tox .tox-editor-header {
+        background: {{ settings.colors.background }}!important;
+        border-bottom: 2px solid {{ settings.colors.accent }}!important;
+    }
+    
+    .tox .tox-toolbar__primary {
+        background: {{ settings.colors.background }}!important;
+    }
+    
+    .tox .tox-button {
+        color: {{ settings.colors.secondary }}!important;
+    }
+    
+    .tox .tox-button:hover {
+        background: {{ settings.colors.accent }}!important;
+        color: white!important;
+    }
+    
+    .tox .tox-button--enabled {
+        background: {{ settings.colors.primary }}!important;
+        color: white!important;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Modifier la section: {{ section.title }}</h1>
+    <h1 class="h2">✏️ Éditeur Avancé: {{ section.title }}</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="showEditorStats()">
+                <i class="bi bi-graph-up"></i> Statistiques
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-warning" onclick="previewContent()">
+                <i class="bi bi-eye"></i> Aperçu
+            </button>
+        </div>
         <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Retour
         </a>
     </div>
 </div>
 
+<!-- Custom Styles Panel -->
+<div class="custom-styles-panel">
+    <h5><i class="bi bi-palette"></i> Styles Rapides du Site</h5>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="style-preview" onclick="applyQuickStyle('heading-primary')">
+                <h4 style="color: {{ settings.colors.primary }}; font-family: '{{ settings.fonts.title }}', sans-serif; margin: 0;">
+                    Titre Principal
+                </h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="style-preview" onclick="applyQuickStyle('heading-secondary')">
+                <h5 style="color: {{ settings.colors.secondary }}; font-family: '{{ settings.fonts.title }}', sans-serif; margin: 0;">
+                    Sous-titre
+                </h5>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="style-preview" onclick="applyQuickStyle('text-highlight')">
+                <p style="background-color: {{ settings.colors.highlight }}; color: white; padding: 5px; margin: 0; border-radius: {{ settings.border_radius }};">
+                    Texte en surbrillance
+                </p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="style-preview" onclick="applyQuickStyle('text-accent')">
+                <p style="color: {{ settings.colors.accent }}; font-weight: bold; margin: 0;">
+                    Texte d'accent
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-8">
         <div class="card mb-4">
-            <div class="card-header">
-                Informations de la section
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-text"></i> Contenu de la Section</span>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary" onclick="insertTemplate('two-columns')">
+                        <i class="bi bi-layout-two-columns"></i> 2 Colonnes
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="insertTemplate('callout-box')">
+                        <i class="bi bi-chat-square-quote"></i> Encadré
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="insertTemplate('image-gallery')">
+                        <i class="bi bi-images"></i> Galerie
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('admin.edit_section', section_id=section._id) }}">
@@ -97,12 +211,14 @@
                     <div class="mb-3">
                         {{ form.content.label(class="form-label") }}
                         <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Utilisez l'éditeur ci-dessous pour formater votre texte. 
-                            Vous pouvez ajouter des couleurs, des styles, des listes, des tableaux et plus encore.
+                            <i class="bi bi-lightbulb"></i> 
+                            <strong>Éditeur Avancé:</strong> Utilisez les styles rapides ci-dessus, glissez-déposez les images, 
+                            et explorez tous les outils de formatage pour créer du contenu riche et attractif.
                         </div>
                         
                         <!-- Palette de couleurs rapide -->
                         <div class="color-palette mb-2">
+                            <span class="small text-muted me-2">Couleurs du site:</span>
                             <button type="button" class="color-btn" style="background-color: {{ settings.colors.primary }}" 
                                     onclick="applyColor('{{ settings.colors.primary }}')" title="Couleur primaire"></button>
                             <button type="button" class="color-btn" style="background-color: {{ settings.colors.secondary }}" 
@@ -111,12 +227,31 @@
                                     onclick="applyColor('{{ settings.colors.accent }}')" title="Couleur d'accent"></button>
                             <button type="button" class="color-btn" style="background-color: {{ settings.colors.highlight }}" 
                                     onclick="applyColor('{{ settings.colors.highlight }}')" title="Couleur de surbrillance"></button>
+                            <button type="button" class="color-btn" style="background-color: {{ settings.colors.background }}" 
+                                    onclick="applyColor('{{ settings.colors.background }}')" title="Couleur de fond"></button>
                         </div>
                         
-                        {{ form.content(id="summernote", class="form-control") }}
+                        {{ form.content(id="advanced-editor", class="form-control") }}
                         {% for error in form.content.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}
+                        
+                        <div class="editor-stats" id="editor-stats" style="display: none;">
+                            <div class="row">
+                                <div class="col">
+                                    <strong>Mots:</strong> <span id="word-count">0</span>
+                                </div>
+                                <div class="col">
+                                    <strong>Caractères:</strong> <span id="char-count">0</span>
+                                </div>
+                                <div class="col">
+                                    <strong>Images:</strong> <span id="image-count">0</span>
+                                </div>
+                                <div class="col">
+                                    <strong>Liens:</strong> <span id="link-count">0</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -128,7 +263,7 @@
                     </div>
                     
                     <div class="d-grid">
-                        {{ form.submit(class="btn btn-primary") }}
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
                     </div>
                 </form>
             </div>
@@ -136,9 +271,10 @@
     </div>
     
     <div class="col-md-4">
+        <!-- Enhanced Image Upload -->
         <div class="card mb-4">
             <div class="card-header">
-                <i class="bi bi-image"></i> Ajouter une image
+                <i class="bi bi-cloud-upload"></i> Gestionnaire d'Images Avancé
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('admin.upload_image', section_id=section._id) }}" enctype="multipart/form-data">
@@ -146,8 +282,11 @@
                     
                     <div class="mb-3">
                         {{ upload_form.image.label(class="form-label") }}
-                        {{ upload_form.image(class="form-control", onchange="previewImage(this)") }}
-                        <div class="form-text">Formats acceptés: jpg, jpeg, png, gif, svg, webp</div>
+                        {{ upload_form.image(class="form-control", onchange="previewImage(this)", accept="image/*", multiple=True) }}
+                        <div class="form-text">
+                            <i class="bi bi-info-circle"></i> 
+                            Formats: JPG, PNG, GIF, SVG, WebP | Glissez-déposez directement dans l'éditeur
+                        </div>
                         {% for error in upload_form.image.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}
@@ -156,52 +295,46 @@
                     
                     <div class="mb-3">
                         {{ upload_form.alt_text.label(class="form-label") }}
-                        {{ upload_form.alt_text(class="form-control") }}
-                        <div class="form-text">Description pour les lecteurs d'écran (accessibilité)</div>
-                        {% for error in upload_form.alt_text.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
+                        {{ upload_form.alt_text(class="form-control", placeholder="Description pour l'accessibilité") }}
+                        <div class="form-text">🎯 Important pour l'accessibilité et le SEO</div>
                     </div>
                     
                     <div class="mb-3">
                         {{ upload_form.caption.label(class="form-label") }}
-                        {{ upload_form.caption(class="form-control") }}
-                        <div class="form-text">Légende affichée sous l'image (optionnel)</div>
-                        {% for error in upload_form.caption.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
+                        {{ upload_form.caption(class="form-control", placeholder="Légende visible sous l'image") }}
                     </div>
                     
-                    <!-- Options avancées -->
+                    <!-- Enhanced Display Options -->
                     <div class="advanced-options">
-                        <h6><i class="bi bi-gear"></i> Options d'affichage</h6>
+                        <h6><i class="bi bi-sliders"></i> Options d'Affichage Avancées</h6>
                         
                         <div class="row">
                             <div class="col-md-6 mb-2">
                                 {{ upload_form.size.label(class="form-label small") }}
-                                {{ upload_form.size(class="form-select form-select-sm") }}
+                                {{ upload_form.size(class="form-select form-select-sm", onchange="updateImagePreview()") }}
                             </div>
                             
                             <div class="col-md-6 mb-2">
                                 {{ upload_form.alignment.label(class="form-label small") }}
-                                {{ upload_form.alignment(class="form-select form-select-sm") }}
+                                {{ upload_form.alignment(class="form-select form-select-sm", onchange="updateImagePreview()") }}
                             </div>
                         </div>
                         
                         <div class="mb-2">
                             {{ upload_form.shape.label(class="form-label small") }}
-                            {{ upload_form.shape(class="form-select form-select-sm") }}
+                            {{ upload_form.shape(class="form-select form-select-sm", onchange="updateImagePreview()") }}
                         </div>
                         
                         <div class="mb-2">
                             {{ upload_form.link_url.label(class="form-label small") }}
                             {{ upload_form.link_url(class="form-control form-control-sm", placeholder="https://...") }}
+                            <div class="form-text small">🔗 Rendre l'image cliquable</div>
                         </div>
                         
                         <div class="mb-2">
                             {{ upload_form.gallery_group.label(class="form-label small") }}
                             {{ upload_form.gallery_group(class="form-control form-control-sm", placeholder="Ex: expo2024") }}
-                            <div class="form-text small">{{ upload_form.gallery_group.description }}</div>
+                            <div class="form-text small">📸 {{ upload_form.gallery_group.description }}</div>
                         </div>
                     </div>
                     
@@ -212,10 +345,14 @@
             </div>
         </div>
         
+        <!-- Existing Images Gallery -->
         {% if section.images and section.images|length > 0 %}
         <div class="card mb-4">
-            <div class="card-header">
-                Images existantes ({{ section.images|length }})
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>🖼️ Images de la Section ({{ section.images|length }})</span>
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="optimizeAllImages()">
+                    <i class="bi bi-lightning"></i> Optimiser
+                </button>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -223,24 +360,32 @@
                     <div class="col-md-6 mb-3">
                         <div class="card image-card">
                             <div class="image-overlay">
-                                <strong>{{ image.size|default('medium') }}</strong> | 
-                                {{ image.alignment|default('center') }}
+                                <div><strong>{{ image.size|default('medium')|title }}</strong></div>
+                                <div>{{ image.alignment|default('center')|title }}</div>
                                 {% if image.gallery_group %}
-                                    <br><i class="bi bi-images"></i> {{ image.gallery_group }}
+                                    <div><i class="bi bi-images"></i> {{ image.gallery_group }}</div>
                                 {% endif %}
+                                <div class="small">{{ image.uploaded_at.strftime('%d/%m/%Y') if image.uploaded_at else 'Date inconnue' }}</div>
                             </div>
                             <img src="{{ image.path }}" alt="{{ image.alt_text }}" class="image-thumbnail card-img-top">
                             <div class="card-body p-2">
-                                <p class="card-text small mb-1">{{ image.alt_text|truncate(20) }}</p>
+                                <p class="card-text small mb-1" title="{{ image.alt_text }}">
+                                    {{ image.alt_text|truncate(25) }}
+                                </p>
                                 <div class="btn-group btn-group-sm w-100" role="group">
+                                    <button type="button" class="btn btn-outline-info" 
+                                            onclick="insertImageInEditor('{{ image.path }}', '{{ image.alt_text }}', '{{ image.caption or '' }}')"
+                                            title="Insérer dans l'éditeur">
+                                        <i class="bi bi-plus-square"></i>
+                                    </button>
                                     <a href="{{ url_for('admin.edit_image', section_id=section._id, image_id=image.id) }}" 
-                                       class="btn btn-outline-primary">
+                                       class="btn btn-outline-primary" title="Éditer">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <form method="POST" action="{{ url_for('admin.remove_image', section_id=section._id, image_id=image.id) }}" 
-                                          style="display: inline-block; width: 50%;"
-                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette image ?');">
-                                        <button type="submit" class="btn btn-outline-danger w-100">
+                                          style="display: inline-block; width: 33.33%;"
+                                          onsubmit="return confirm('🗑️ Supprimer définitivement cette image ?');">
+                                        <button type="submit" class="btn btn-outline-danger w-100" title="Supprimer">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -253,68 +398,560 @@
             </div>
         </div>
         {% endif %}
+        
+        <!-- Help Panel -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-question-circle"></i> Aide Rapide
+            </div>
+            <div class="card-body">
+                <div class="accordion accordion-flush" id="helpAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-shortcuts">
+                                ⌨️ Raccourcis Clavier
+                            </button>
+                        </h2>
+                        <div id="help-shortcuts" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body small">
+                                <strong>Ctrl+B:</strong> Gras<br>
+                                <strong>Ctrl+I:</strong> Italique<br>
+                                <strong>Ctrl+U:</strong> Souligné<br>
+                                <strong>Ctrl+Z:</strong> Annuler<br>
+                                <strong>Ctrl+Y:</strong> Refaire<br>
+                                <strong>Ctrl+K:</strong> Insérer un lien
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-images">
+                                🖼️ Images
+                            </button>
+                        </h2>
+                        <div id="help-images" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body small">
+                                • Glissez-déposez directement dans l'éditeur<br>
+                                • Utilisez les styles rapides pour un rendu cohérent<br>
+                                • Groupez les images en galeries<br>
+                                • Optimisez pour le web (format WebP recommandé)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Content Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">👁️ Aperçu du Contenu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="preview-content" style="min-height: 400px;">
+                <!-- Preview content will be inserted here -->
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-fr-FR.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('#summernote').summernote({
-            placeholder: 'Contenu de la section...',
-            tabsize: 2,
-            height: 400,
-            lang: 'fr-FR',
-            toolbar: [
-                ['style', ['style']],
-                ['font', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
-                ['fontname', ['fontname']],
-                ['fontsize', ['fontsize']],
-                ['color', ['color']],
-                ['para', ['ul', 'ol', 'paragraph']],
-                ['height', ['height']],
-                ['table', ['table']],
-                ['insert', ['link', 'hr']],
-                ['view', ['fullscreen', 'codeview', 'help']]
-            ],
-            fontNames: [
-                '{{ settings.fonts.body }}', '{{ settings.fonts.title }}',
-                'Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana'
-            ],
-            fontNamesIgnoreCheck: ['{{ settings.fonts.body }}', '{{ settings.fonts.title }}'],
-            colors: [
-                ['{{ settings.colors.primary }}', '{{ settings.colors.secondary }}', '{{ settings.colors.accent }}', '{{ settings.colors.highlight }}'],
-                ['#000000', '#424242', '#636363', '#9C9C94', '#CEC6CE', '#EFEFEF', '#F7F7F7', '#FFFFFF'],
-                ['#FF0000', '#FF9C00', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#9C00FF', '#FF00FF'],
-                ['#F7C6CE', '#FFE7CE', '#FFEFC6', '#D6EFD6', '#CEDEE7', '#CEE7F7', '#D6D6E7', '#E7D6DE'],
-                ['#E79C9C', '#FFC69C', '#FFE79C', '#B5D6A5', '#A5C6CE', '#9CC6EF', '#B5A5D6', '#D6A5BD'],
-                ['#E76363', '#F7AD6B', '#FFD663', '#94BD7B', '#73A5AD', '#6BADDE', '#8C7BC6', '#C67BA5'],
-                ['#CE0000', '#E79439', '#EFC631', '#6BA54A', '#4A7B8C', '#3984C6', '#634AA5', '#A54A7B'],
-                ['#9C0000', '#B56308', '#BD9400', '#397B21', '#104A5A', '#085294', '#311873', '#731842']
-            ],
-            callbacks: {
-                onImageUpload: function(files) {
-                    // Custom image upload handler if needed
+let tinymceEditor;
+
+// Initialize TinyMCE with advanced configuration
+document.addEventListener('DOMContentLoaded', function() {
+    tinymce.init({
+        selector: '#advanced-editor',
+        height: 600,
+        
+        // Enhanced plugins for maximum functionality
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'visualchars', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount', 'editimage',
+            'quickbars', 'emoticons', 'template', 'codesample', 'hr', 'pagebreak',
+            'nonbreaking', 'toc', 'textpattern', 'importcss', 'autosave', 'save'
+        ],
+        
+        // Advanced toolbar with multiple rows
+        toolbar_mode: 'sliding',
+        toolbar: [
+            'undo redo | save | styles fontsize fontfamily | bold italic underline strikethrough | forecolor backcolor | emoticons',
+            'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | hr pagebreak',
+            'searchreplace | visualblocks visualchars | code fullscreen preview | help'
+        ].join(' | '),
+        
+        // Quick toolbars for better UX
+        quickbars_selection_toolbar: 'bold italic | quicklink h2 h3 blockquote',
+        quickbars_insert_toolbar: 'quickimage quicktable | hr pagebreak',
+        quickbars_image_toolbar: 'alignleft aligncenter alignright | rotateleft rotateright | imageoptions',
+        
+        // Custom style formats matching site theme
+        style_formats: [
+            {
+                title: '🎨 Styles du Site',
+                items: [
+                    {
+                        title: 'Titre Principal',
+                        block: 'h2',
+                        styles: {
+                            color: '{{ settings.colors.primary }}',
+                            'font-family': '"{{ settings.fonts.title }}", sans-serif',
+                            'font-weight': '500',
+                            'margin-bottom': '1rem',
+                            'border-bottom': '2px solid {{ settings.colors.accent }}',
+                            'padding-bottom': '0.5rem'
+                        }
+                    },
+                    {
+                        title: 'Sous-titre',
+                        block: 'h3',
+                        styles: {
+                            color: '{{ settings.colors.secondary }}',
+                            'font-family': '"{{ settings.fonts.title }}", sans-serif',
+                            'font-weight': '400',
+                            'margin-bottom': '0.8rem'
+                        }
+                    },
+                    {
+                        title: 'Texte en Surbrillance',
+                        inline: 'span',
+                        styles: {
+                            'background-color': '{{ settings.colors.highlight }}',
+                            color: 'white',
+                            padding: '2px 6px',
+                            'border-radius': '{{ settings.border_radius }}',
+                            'font-weight': 'bold'
+                        }
+                    },
+                    {
+                        title: 'Texte d\'Accent',
+                        inline: 'span',
+                        styles: {
+                            color: '{{ settings.colors.accent }}',
+                            'font-weight': 'bold',
+                            'font-size': '1.1em'
+                        }
+                    },
+                    {
+                        title: 'Encadré Important',
+                        block: 'div',
+                        styles: {
+                            'background-color': '{{ settings.colors.background }}',
+                            'border-left': '4px solid {{ settings.colors.primary }}',
+                            padding: '1rem',
+                            'margin': '1rem 0',
+                            'border-radius': '{{ settings.border_radius }}',
+                            'box-shadow': '0 2px 4px rgba(0,0,0,0.1)'
+                        }
+                    }
+                ]
+            },
+            {
+                title: '📐 Mise en Forme',
+                items: [
+                    {
+                        title: 'Deux Colonnes',
+                        block: 'div',
+                        classes: 'two-columns',
+                        styles: {
+                            'display': 'grid',
+                            'grid-template-columns': '1fr 1fr',
+                            'gap': '2rem',
+                            'margin': '1rem 0'
+                        }
+                    },
+                    {
+                        title: 'Trois Colonnes',
+                        block: 'div',
+                        classes: 'three-columns', 
+                        styles: {
+                            'display': 'grid',
+                            'grid-template-columns': '1fr 1fr 1fr',
+                            'gap': '1rem',
+                            'margin': '1rem 0'
+                        }
+                    },
+                    {
+                        title: 'Citation',
+                        block: 'blockquote',
+                        styles: {
+                            'border-left': '4px solid {{ settings.colors.accent }}',
+                            'padding-left': '1rem',
+                            'font-style': 'italic',
+                            'font-size': '1.1em',
+                            'color': '{{ settings.colors.secondary }}',
+                            'margin': '1.5rem 0'
+                        }
+                    }
+                ]
+            },
+            {
+                title: '🖼️ Images',
+                items: [
+                    {
+                        title: 'Image Flottante Gauche',
+                        selector: 'img',
+                        styles: {
+                            'float': 'left',
+                            'margin': '0 1rem 1rem 0',
+                            'border-radius': '{{ settings.border_radius }}',
+                            'box-shadow': '0 4px 8px rgba(0,0,0,0.1)'
+                        }
+                    },
+                    {
+                        title: 'Image Flottante Droite',
+                        selector: 'img',
+                        styles: {
+                            'float': 'right',
+                            'margin': '0 0 1rem 1rem',
+                            'border-radius': '{{ settings.border_radius }}',
+                            'box-shadow': '0 4px 8px rgba(0,0,0,0.1)'
+                        }
+                    },
+                    {
+                        title: 'Image Centrée',
+                        selector: 'img',
+                        styles: {
+                            'display': 'block',
+                            'margin': '1rem auto',
+                            'border-radius': '{{ settings.border_radius }}',
+                            'box-shadow': '0 4px 8px rgba(0,0,0,0.1)'
+                        }
+                    },
+                    {
+                        title: 'Image Ronde',
+                        selector: 'img',
+                        styles: {
+                            'border-radius': '50%',
+                            'box-shadow': '0 4px 8px rgba(0,0,0,0.1)'
+                        }
+                    }
+                ]
+            }
+        ],
+        
+        // Enhanced formatting options
+        fontsize_formats: '8pt 9pt 10pt 11pt 12pt 14pt 16pt 18pt 20pt 22pt 24pt 26pt 28pt 36pt 48pt 72pt',
+        fontfamily_formats: 
+            `{{ settings.fonts.title }}='{{ settings.fonts.title }}', sans-serif; ` +
+            `{{ settings.fonts.body }}='{{ settings.fonts.body }}', sans-serif; ` +
+            'Arial=arial,helvetica,sans-serif; Georgia=georgia,palatino,serif; Helvetica=helvetica,arial,sans-serif; Times New Roman=times new roman,times,serif; Verdana=verdana,geneva,sans-serif',
+        
+        // Image handling with drag & drop
+        paste_data_images: true,
+        automatic_uploads: true,
+        file_picker_types: 'image',
+        images_upload_url: '{{ url_for("admin.upload_image", section_id=section._id) }}',
+        images_upload_handler: function (blobInfo, success, failure) {
+            const xhr = new XMLHttpRequest();
+            xhr.withCredentials = false;
+            xhr.open('POST', '{{ url_for("admin.upload_image", section_id=section._id) }}');
+            
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+            
+            xhr.onload = function() {
+                if (xhr.status === 403) {
+                    failure('HTTP Error: ' + xhr.status, { remove: true });
+                    return;
+                }
+                
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    failure('HTTP Error: ' + xhr.status);
+                    return;
+                }
+                
+                const json = JSON.parse(xhr.responseText);
+                if (!json || typeof json.location != 'string') {
+                    failure('Invalid JSON: ' + xhr.responseText);
+                    return;
+                }
+                
+                success(json.location);
+            };
+            
+            xhr.onerror = function () {
+                failure('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+            };
+            
+            xhr.send(formData);
+        },
+        
+        // Content CSS to match frontend
+        content_css: [
+            '//fonts.googleapis.com/css2?family={{ settings.fonts.title|replace(" ", "+") }}:wght@400;500;600&family={{ settings.fonts.body|replace(" ", "+") }}:wght@300;400&display=swap'
+        ],
+        
+        content_style: `
+            body { 
+                font-family: '{{ settings.fonts.body }}', sans-serif; 
+                font-size: 16px; 
+                color: {{ settings.colors.secondary }};
+                line-height: 1.6;
+                max-width: 100%;
+                padding: 1rem;
+            }
+            
+            h1, h2, h3, h4, h5, h6 { 
+                font-family: '{{ settings.fonts.title }}', sans-serif; 
+                color: {{ settings.colors.primary }};
+                margin-bottom: 0.8rem;
+            }
+            
+            .two-columns { 
+                display: grid; 
+                grid-template-columns: 1fr 1fr; 
+                gap: 2rem; 
+                margin: 1rem 0; 
+            }
+            
+            .three-columns { 
+                display: grid; 
+                grid-template-columns: 1fr 1fr 1fr; 
+                gap: 1rem; 
+                margin: 1rem 0; 
+            }
+            
+            @media (max-width: 768px) {
+                .two-columns, .three-columns { 
+                    grid-template-columns: 1fr; 
                 }
             }
-        });
-    });
-    
-    function applyColor(color) {
-        $('#summernote').summernote('foreColor', color);
-    }
-    
-    function previewImage(input) {
-        const preview = document.getElementById('image-preview');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">`;
+            
+            blockquote {
+                border-left: 4px solid {{ settings.colors.accent }};
+                padding-left: 1rem;
+                font-style: italic;
+                font-size: 1.1em;
+                color: {{ settings.colors.secondary }};
+                margin: 1.5rem 0;
             }
-            reader.readAsDataURL(input.files[0]);
+            
+            img {
+                max-width: 100%;
+                height: auto;
+                border-radius: {{ settings.border_radius }};
+            }
+            
+            .callout-box {
+                background-color: {{ settings.colors.background }};
+                border: 1px solid {{ settings.colors.accent }};
+                padding: 1rem;
+                margin: 1rem 0;
+                border-radius: {{ settings.border_radius }};
+            }
+        `,
+        
+        // Advanced configuration
+        contextmenu: 'link image table spellchecker',
+        browser_spellcheck: true,
+        resize: 'both',
+        elementpath: true,
+        branding: false,
+        promotion: false,
+        
+        // Templates for quick insertion
+        templates: [
+            {
+                title: 'Deux Colonnes',
+                description: 'Layout à deux colonnes',
+                content: '<div class="two-columns"><div><h3>Colonne 1</h3><p>Votre contenu ici...</p></div><div><h3>Colonne 2</h3><p>Votre contenu ici...</p></div></div>'
+            },
+            {
+                title: 'Encadré Important',
+                description: 'Boîte d\'information mise en valeur',
+                content: '<div class="callout-box"><h4>🔔 Information Importante</h4><p>Votre message important ici...</p></div>'
+            },
+            {
+                title: 'Citation avec Auteur',
+                description: 'Citation avec source',
+                content: '<blockquote><p>Votre citation ici...</p><footer>— <cite>Auteur</cite></footer></blockquote>'
+            }
+        ],
+        
+        // Autosave configuration
+        autosave_ask_before_unload: true,
+        autosave_interval: '30s',
+        autosave_prefix: 'tinymce-autosave-{path}{query}-{id}-',
+        
+        // Setup callback
+        setup: function(editor) {
+            tinymceEditor = editor;
+            
+            // Word count and statistics
+            editor.on('keyup', function() {
+                updateEditorStats();
+            });
+            
+            editor.on('change', function() {
+                updateEditorStats();
+            });
+            
+            // Custom buttons
+            editor.ui.registry.addButton('customstyles', {
+                text: 'Styles',
+                tooltip: 'Appliquer les styles du site',
+                onAction: function() {
+                    showCustomStylesMenu();
+                }
+            });
         }
+    });
+});
+
+// Apply colors from palette
+function applyColor(color) {
+    if (tinymceEditor) {
+        tinymceEditor.execCommand('ForeColor', false, color);
     }
+}
+
+// Apply quick styles
+function applyQuickStyle(styleType) {
+    if (!tinymceEditor) return;
+    
+    const styles = {
+        'heading-primary': () => {
+            tinymceEditor.execCommand('mceInsertContent', false, 
+                `<h2 style="color: {{ settings.colors.primary }}; font-family: '{{ settings.fonts.title }}', sans-serif; border-bottom: 2px solid {{ settings.colors.accent }}; padding-bottom: 0.5rem;">Votre titre ici</h2>`
+            );
+        },
+        'heading-secondary': () => {
+            tinymceEditor.execCommand('mceInsertContent', false,
+                `<h3 style="color: {{ settings.colors.secondary }}; font-family: '{{ settings.fonts.title }}', sans-serif;">Votre sous-titre ici</h3>`
+            );
+        },
+        'text-highlight': () => {
+            const selectedText = tinymceEditor.selection.getContent() || 'Texte en surbrillance';
+            tinymceEditor.execCommand('mceInsertContent', false,
+                `<span style="background-color: {{ settings.colors.highlight }}; color: white; padding: 2px 6px; border-radius: {{ settings.border_radius }}; font-weight: bold;">${selectedText}</span>`
+            );
+        },
+        'text-accent': () => {
+            const selectedText = tinymceEditor.selection.getContent() || 'Texte d\'accent';
+            tinymceEditor.execCommand('mceInsertContent', false,
+                `<span style="color: {{ settings.colors.accent }}; font-weight: bold; font-size: 1.1em;">${selectedText}</span>`
+            );
+        }
+    };
+    
+    if (styles[styleType]) {
+        styles[styleType]();
+    }
+}
+
+// Insert templates
+function insertTemplate(templateType) {
+    if (!tinymceEditor) return;
+    
+    const templates = {
+        'two-columns': '<div class="two-columns"><div><h3>Colonne 1</h3><p>Votre contenu ici...</p></div><div><h3>Colonne 2</h3><p>Votre contenu ici...</p></div></div>',
+        'callout-box': '<div class="callout-box"><h4>🔔 Information Importante</h4><p>Votre message important ici...</p></div>',
+        'image-gallery': '<div class="image-gallery"><p><em>Uploadez vos images et groupez-les avec le même nom de groupe pour créer une galerie automatique.</em></p></div>'
+    };
+    
+    if (templates[templateType]) {
+        tinymceEditor.execCommand('mceInsertContent', false, templates[templateType]);
+    }
+}
+
+// Insert image from gallery into editor
+function insertImageInEditor(imagePath, altText, caption) {
+    if (!tinymceEditor) return;
+    
+    let imageHtml = `<img src="${imagePath}" alt="${altText}" style="max-width: 100%; height: auto; border-radius: {{ settings.border_radius }};">`;
+    
+    if (caption) {
+        imageHtml = `<figure>${imageHtml}<figcaption>${caption}</figcaption></figure>`;
+    }
+    
+    tinymceEditor.execCommand('mceInsertContent', false, imageHtml);
+}
+
+// Update editor statistics
+function updateEditorStats() {
+    if (!tinymceEditor) return;
+    
+    const content = tinymceEditor.getContent();
+    const textContent = tinymceEditor.getContent({format: 'text'});
+    
+    // Count words
+    const wordCount = textContent.trim() ? textContent.trim().split(/\s+/).length : 0;
+    
+    // Count characters
+    const charCount = textContent.length;
+    
+    // Count images
+    const imageCount = (content.match(/<img/g) || []).length;
+    
+    // Count links
+    const linkCount = (content.match(/<a/g) || []).length;
+    
+    // Update display
+    document.getElementById('word-count').textContent = wordCount;
+    document.getElementById('char-count').textContent = charCount;
+    document.getElementById('image-count').textContent = imageCount;
+    document.getElementById('link-count').textContent = linkCount;
+}
+
+// Show editor statistics
+function showEditorStats() {
+    updateEditorStats();
+    const statsDiv = document.getElementById('editor-stats');
+    statsDiv.style.display = statsDiv.style.display === 'none' ? 'block' : 'none';
+}
+
+// Preview content
+function previewContent() {
+    if (!tinymceEditor) return;
+    
+    const content = tinymceEditor.getContent();
+    const previewDiv = document.getElementById('preview-content');
+    
+    // Apply site styles to preview
+    previewDiv.innerHTML = `
+        <style>
+            body { font-family: '{{ settings.fonts.body }}', sans-serif; color: {{ settings.colors.secondary }}; }
+            h1, h2, h3, h4, h5, h6 { font-family: '{{ settings.fonts.title }}', sans-serif; color: {{ settings.colors.primary }}; }
+            .two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+            .callout-box { background-color: {{ settings.colors.background }}; border: 1px solid {{ settings.colors.accent }}; padding: 1rem; border-radius: {{ settings.border_radius }}; }
+            img { max-width: 100%; height: auto; border-radius: {{ settings.border_radius }}; }
+        </style>
+        <div class="section-content">${content}</div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+// Image preview for upload
+function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">`;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Optimize all images (placeholder function)
+function optimizeAllImages() {
+    alert('🚀 Fonctionnalité à venir: Optimisation automatique des images pour de meilleures performances!');
+}
+
+// Update image preview in upload form
+function updateImagePreview() {
+    // This could show a live preview of how the image will appear
+    console.log('Image preview updated');
+}
 </script>
 {% endblock %}
