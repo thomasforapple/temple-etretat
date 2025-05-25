@@ -15,7 +15,7 @@ class SectionForm(FlaskForm):
     content = TextAreaField('Contenu', validators=[DataRequired()], 
                           render_kw={"placeholder": "Utilisez l'éditeur avancé pour créer du contenu riche avec mise en forme, images et styles personnalisés..."})
     visible = BooleanField('Visible', default=True)
-    submit = SubmitField('💾 Enregistrer')
+    submit = SubmitField('Enregistrer')
 
 # Enhanced image upload form with advanced options
 def get_image_upload_form():
