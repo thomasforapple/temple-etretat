@@ -128,7 +128,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">✏️ Éditeur Avancé: {{ section.title }}</h1>
+    <h1 class="h2">Éditeur Avancé: {{ section.title }}</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <div class="btn-group me-2">
             <button type="button" class="btn btn-sm btn-outline-info" onclick="showEditorStats()">
@@ -144,40 +144,7 @@
     </div>
 </div>
 
-<!-- Custom Styles Panel -->
-<div class="custom-styles-panel">
-    <h5><i class="bi bi-palette"></i> Styles Rapides du Site</h5>
-    <div class="row">
-        <div class="col-md-3">
-            <div class="style-preview" onclick="applyQuickStyle('heading-primary')">
-                <h4 style="color: {{ settings.colors.primary }}; font-family: '{{ settings.fonts.title }}', sans-serif; margin: 0;">
-                    Titre Principal
-                </h4>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="style-preview" onclick="applyQuickStyle('heading-secondary')">
-                <h5 style="color: {{ settings.colors.secondary }}; font-family: '{{ settings.fonts.title }}', sans-serif; margin: 0;">
-                    Sous-titre
-                </h5>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="style-preview" onclick="applyQuickStyle('text-highlight')">
-                <p style="background-color: {{ settings.colors.highlight }}; color: white; padding: 5px; margin: 0; border-radius: {{ settings.border_radius }};">
-                    Texte en surbrillance
-                </p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="style-preview" onclick="applyQuickStyle('text-accent')">
-                <p style="color: {{ settings.colors.accent }}; font-weight: bold; margin: 0;">
-                    Texte d'accent
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <div class="row">
     <div class="col-md-8">
